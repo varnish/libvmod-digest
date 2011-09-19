@@ -65,7 +65,7 @@ version
 -------
 
 Prototype
-        header.version()
+        digest.version()
 Returns
         string
 Description
@@ -119,12 +119,12 @@ SEE ALSO
 
 * varnishd(1)
 * vcl(7)
-* https://github.com/KristianLyng/libvmod-digest
+* https://github.com/varnish/libvmod-digest
 
 COPYRIGHT
 =========
 
 This document is licensed under the same license as the
-libvmod-header project. See LICENSE for details.
+libvmod-digest project. See LICENSE for details.
 
 * Copyright (c) 2011 Varnish Software

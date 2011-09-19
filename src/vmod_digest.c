@@ -9,6 +9,7 @@
 #include "bin/varnishd/cache.h"
 #include "vsha256.h"
 #include "vcc_if.h"
+#include "config.h"
 
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
@@ -130,6 +131,12 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	}
 	WS_Release(sp->ws,u);
 	return p;
+}
+
+const char * __match_proto__()
+vmod_version(struct sess *sp __attribute__((unused)))
+{
+	return VERSION;
 }
 
 #define VMOD_HMAC_FOO(hash,hashup) \

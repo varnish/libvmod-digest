@@ -3,3 +3,4 @@ Init init_function
 Function STRING hmac_sha256(STRING, STRING)
 Function STRING hmac_sha1(STRING, STRING)
 Function STRING hmac_md5(STRING, STRING)
+Function STRING version()
