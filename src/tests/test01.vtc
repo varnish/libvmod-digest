@@ -1,4 +1,7 @@
-varnishtest "Test example vmod"
+varnishtest "Test digest vmod"
+
+# Test vectors borrowed from wikipedia (which is in turn borrowed from
+# rfc2104)
 
 server s1 {
        rxreq
@@ -6,17 +9,21 @@ server s1 {
 } -start
 
 varnish v1 -vcl+backend {
-	import example from "${vmod_topbuild}/src/.libs/libvmod_example.so";
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
 
 	sub vcl_deliver {
-		set resp.http.hello = example.hello("World");
+		set resp.http.sha256 = digest.hmac_sha256("key", "The quick brown fox jumps over the lazy dog");
+		set resp.http.sha1 = digest.hmac_sha1("key", "The quick brown fox jumps over the lazy dog");
+		set resp.http.md5 = digest.hmac_md5("key", "The quick brown fox jumps over the lazy dog");
 	}
 } -start
 
 client c1 {
 	txreq -url "/"
 	rxresp
-	expect resp.http.hello == "Hello, World"
+	expect resp.http.sha256 == "MHhmN2JjODNmNDMwNTM4NDI0YjEzMjk4ZTZhYTZmYjE0M2VmNGQ1OWExNDk0NjE3NTk5NzQ3OWRiYzJkMWEzY2Q4"
+	expect resp.http.sha1 == "MHhkZTdjOWI4NWI4Yjc4YWE2YmM4YTdhMzZmNzBhOTA3MDFjOWRiNGQ5"
+	expect resp.http.md5 == "MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ=="
 }
 
 client c1 -run
