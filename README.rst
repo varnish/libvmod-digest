@@ -55,11 +55,10 @@ Example VCL::
 hmac_(hash)
 -----------
 
-Prototype::
-
-	digest.hmac_md5(<key>,<message>);
-	digest.hmac_sha1(<key>, <message>);
-	digest.hmac_sha256(<key>, <message));
+Prototype
+	``digest.hmac_md5(<key>,<message>);``
+	``digest.hmac_sha1(<key>, <message>);``
+	``digest.hmac_sha256(<key>, <message));``
 Returns
         String
 Description
@@ -71,11 +70,10 @@ Example
 base64, base64url, base64url_nopad
 ----------------------------------
 
-Prototype::
-
-        digest.base64(<string>);
-        digest.base64url(<string>);
-        digest.base64url_nopad(<string>);
+Prototype
+        ``digest.base64(<string>);``
+        ``digest.base64url(<string>);``
+        ``digest.base64url_nopad(<string>);``
 Returns
         String
 Description
@@ -91,9 +89,9 @@ base64_decode, base64url_decode, base64url_nopad_decode
 -------------------------------------------------------
 
 Prototype
-        digest.base64_decode(<string>);
-        digest.base64url_decode(<string>);
-        digest.base64url_nopad_decode(<string>);
+        ``digest.base64_decode(<string>);``
+        ``digest.base64url_decode(<string>);``
+        ``digest.base64url_nopad_decode(<string>);``
 Returns
         String
 Description
@@ -101,18 +99,14 @@ Description
         treat padding the same, meaning base64url_decode and
         base64url_nopad_decode are identical, but available for consistency
         and practicality.
-Example::
-
-        if (digest.base64_decode(digest.hmac_sha256("secret",req.http.x-data)) == req.http.x-data-sig) {
-                ...
-        }
-
+Example
+        ``if (digest.base64_decode(digest.hmac_sha256("secret",req.http.x-data)) == req.http.x-data-sig) {``
 
 version
 -------
 
 Prototype
-        digest.version()
+        ``digest.version()``
 Returns
         string
 Description
