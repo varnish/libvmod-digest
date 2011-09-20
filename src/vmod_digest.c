@@ -1,3 +1,36 @@
+/*-
+ * Copyright (c) 2011 Varnish Software AS
+ * All rights reserved.
+ *
+ * Author: Kristian Lyngstøl <kristian@varnish-cache.org>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*
+ * Digest vmod for Varnish, using libmhash.
+ * See README.rst for usage.
+ */
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -13,10 +46,8 @@
 
 #include "vrt.h"
 #include "bin/varnishd/cache.h"
-#include "vsha256.h"
 #include "vcc_if.h"
 #include "config.h"
-
 
 enum alphabets {
 	BASE64 = 0,
@@ -25,15 +56,17 @@ enum alphabets {
 	N_ALPHA
 };
 
-struct e_alphabet {
+static struct e_alphabet {
 	char *b64;
 	char i64[256];
 	char padding;
 } alphabet[N_ALPHA];
 
-
+/*
+ * Initializes the reverse lookup-table for the relevant base-N alphabet.
+ */
 static void
-VB64_init(struct e_alphabet *alpha)
+vmod_digest_alpha_init(struct e_alphabet *alpha)
 {
 	int i;
 	const char *p;
@@ -61,9 +94,9 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		 "ghijklmnopqrstuvwxyz0123456789-_";
 	alphabet[BASE64URLNOPAD].padding = 0;
-	VB64_init(&alphabet[BASE64]);
-	VB64_init(&alphabet[BASE64URL]);
-	VB64_init(&alphabet[BASE64URLNOPAD]);
+	vmod_digest_alpha_init(&alphabet[BASE64]);
+	vmod_digest_alpha_init(&alphabet[BASE64URL]);
+	vmod_digest_alpha_init(&alphabet[BASE64URLNOPAD]);
 	return (0);
 }
 
@@ -202,6 +235,11 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	int j;
 	MHASH td;
 
+	assert(msg);
+	assert(key);
+	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+
 	/*
 	 * XXX: From mhash(3):
 	 * size_t mhash_get_hash_pblock(hashid type);
@@ -234,20 +272,19 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	return hexenc;
 }
 
-const char *
+static const char *
 vmod_base64_generic(struct sess *sp, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
-	/*
-	 * Base64 encode on the workspace (since it's returned).
-	 */
+	assert(msg);
+	assert(a<N_ALPHA);
+	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+	
 	u = WS_Reserve(sp->ws,0);
 	p = sp->ws->f;
 	u = base64_encode(&alphabet[a],msg,strlen(msg),p,u);
-	/*
-	 * Not enough space.
-	 */
 	if (u < 0) {
 		WS_Release(sp->ws,0);
 		return NULL;
@@ -256,20 +293,19 @@ vmod_base64_generic(struct sess *sp, enum alphabets a, const char *msg)
 	return p;
 }
 
-const char *
+static const char *
 vmod_base64_decode_generic(struct sess *sp, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
-	/*
-	 * Base64 encode on the workspace (since it's returned).
-	 */
+	assert(msg);
+	assert(a<N_ALPHA);
+
+	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
 	u = WS_Reserve(sp->ws,0);
 	p = sp->ws->f;
 	u = base64_decode(&alphabet[a], p,u,msg);
-	/*
-	 * Not enough space.
-	 */
 	if (u < 0) {
 		WS_Release(sp->ws,0);
 		return NULL;
@@ -310,7 +346,6 @@ vmod_hmac_ ## hash(struct sess *sp, const char *key, const char *msg) \
 VMOD_HMAC_FOO(sha256,SHA256)
 VMOD_HMAC_FOO(sha1,SHA1)
 VMOD_HMAC_FOO(md5,MD5)
-
 
 
 const char * __match_proto__()
