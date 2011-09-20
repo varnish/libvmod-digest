@@ -56,6 +56,7 @@ hmac_(hash)
 -----------
 
 Prototype
+        ::
 	digest.hmac_md5(<key>,<message>);
 	digest.hmac_sha1(<key>, <message>);
 	digest.hmac_sha256(<key>, <message));
@@ -71,6 +72,7 @@ base64, base64url, base64url_nopad
 ----------------------------------
 
 Prototype
+        ::
         digest.base64(<string>);
         digest.base64url(<string>);
         digest.base64url_nopad(<string>);
@@ -99,7 +101,8 @@ Description
         treat padding the same, meaning base64url_decode and
         base64url_nopad_decode are identical, but available for consistency
         and practicality.
-Example::
+Example
+        ::
         if (digest.base64_decode(digest.hmac_sha256("secret",req.http.x-data)) == req.http.x-data-sig) {
                 ...
         }
