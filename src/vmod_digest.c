@@ -117,92 +117,75 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
  * null-terminate and return the used space.
  * The alphabet `a` defines... the alphabet. Padding is optional.
  * Inspired heavily by gnulib/Simon Josefsson (as referenced in RFC4648)
+ *
+ * XXX: tmp[] and idx are used to ensure the reader (and author) retains
+ * XXX: a limited amount of sanity. They are strictly speaking not
+ * XXX: necessary, if you don't mind going crazy.
+ *
+ * FIXME: outlenorig is silly. Flip the logic.
  */
 static size_t
 base64_encode (struct e_alphabet *alpha, const char *in,
 		size_t inlen, char *out, size_t outlen)
 {
 	size_t outlenorig = outlen;
-
-	/*
-	 * XXX: These are used to preserve some notion of sanity, and
-	 * hopefully our clever compiler will get rid of them. If that
-	 * turns out to be a problem, the clever compiler is the problem,
-	 * not the code.
-	 */
 	unsigned char tmp[3], idx;
-	while (inlen && outlen) {
+
+	if (outlen<4)
+		return -1;
+
+	while (1) {
+		assert(inlen);
+		assert(outlen>3);
+
 		tmp[0] = (unsigned char) in[0];
 		tmp[1] = (unsigned char) in[1];
 		tmp[2] = (unsigned char) in[2];
 
-		/*
-		 * Outputbyte 1. Easy-peasy.
-		 */
 		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
 
-		if (!--outlen)
-			return -1;
-
-		/*
-		 * Outputbyte 2.
-		 * The "rest" of byte 1, and the start of byte 2, if
-		 * available.
-		 */
-		inlen--;
 		idx = (tmp[0] << 4);
-		if (inlen)
+		if (inlen>1)
 			idx += (tmp[1] >> 4);
 		idx &= 0x3f;
 		*out++ = alpha->b64[idx];
 			
-		if (!--outlen)
-			return -1;
-		
-		/*
-		 * The rest of byte 2, if present.
-		 * Ditto for the third byte
-		 */
-		if (inlen) {
-			inlen--;
+		if (inlen>1) {
 			idx = (tmp[1] << 2);
-			if (inlen)
+			if (inlen>2)
 				idx += tmp[2] >> 6;
 			idx &= 0x3f;
 
 			*out++ = alpha->b64[idx];
 		} else {
-			/*
-			 * If no byte 2 is present, we need to pad.
-			 */
 			if (alpha->padding)
 				*out++ = alpha->padding;
 		}
 
-		if (!--outlen)
-			return -1;
-
-		/*
-		 * The remainder of byte three, again, need to pad if no
-		 * byte 3 is present.
-		 */
-		if (inlen) {
+		if (inlen>2) {
 			*out++ = alpha->b64[tmp[2] & 0x3f];
 		} else {
 			if (alpha->padding)
 				*out++ = alpha->padding;
 		}
 
-		if (!--outlen)
+		/*
+		 * XXX: Only consume 4 bytes, but since we need a fifth for
+		 * XXX: NULL later on, we might as well test here.
+		 */
+		if (outlen<5)
 			return -1;
-		if (inlen)
-			inlen--;
-		if (inlen)
-			in += 3;
+
+		outlen -= 4;
+
+		if (inlen<4)
+			break;
+		
+		inlen -= 3;
+		in += 3;
 	}
 
-	if (!outlen)
-		return -1;
+	assert(outlen);
 	outlen--;
 	*out = '\0';
 	return outlenorig-outlen;

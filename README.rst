@@ -21,6 +21,12 @@ SYNOPSIS
 	digest.hmac_md5(<key>,<message>);
 	digest.hmac_sha1(<key>, <message>);
 	digest.hmac_sha256(<key>, <message));
+        digest.base64(<string>);
+        digest.base64url(<string>);
+        digest.base64url_nopad(<string>);
+        digest.base64_decode(<string>);
+        digest.base64url_decode(<string>);
+        digest.base64url_nopad_decode(<string>);
         digest.version()
 
 DESCRIPTION
@@ -61,17 +67,43 @@ Description
 Example
         ``set resp.http.x-data-sig = digest.hmac_sha256("secretkey",resp.http.x-data)``
 
-base64
-------
+base64, base64url, base64url_nopad
+----------------------------------
 
 Prototype
         digest.base64(<string>);
+        digest.base64url(<string>);
+        digest.base64url_nopad(<string>);
 Returns
         String
 Description
-        Returns the base64-encoded version of the input-string
+        Returns the base64-encoded version of the input-string. The
+        base64url-variant uses base64 url-encoding (+/ replaced by -_) and
+        the base64url_nopad does the same, but avoids adding padding. The
+        latter is more commonly used, though an (allowed) exception to the
+        RFC4648.
 Example
-        ``set resp.http.x-data = digest.base64(digest.hmac_sha256("secret","data"));``
+        ``set resp.http.x-data-sig = digest.base64(digest.hmac_sha256("secret",resp.http.x-data));``
+
+base64_decode, base64url_decode, base64url_nopad_decode
+-------------------------------------------------------
+
+Prototype
+        digest.base64_decode(<string>);
+        digest.base64url_decode(<string>);
+        digest.base64url_nopad_decode(<string>);
+Returns
+        String
+Description
+        Decodes the bas64 and base64url-encoded strings. All functions
+        treat padding the same, meaning base64url_decode and
+        base64url_nopad_decode are identical, but available for consistency
+        and practicality.
+Example::
+        if (digest.base64_decode(digest.hmac_sha256("secret",req.http.x-data)) == req.http.x-data-sig) {
+                ...
+        }
+
 
 version
 -------
