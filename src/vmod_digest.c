@@ -2,8 +2,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+/*
+ * mhash.h has a habit of pulling in assert(). Let's hope it's a define,
+ * and that we can undef it, since Varnish has a better one.
+ */
 #include <mhash.h>
-#undef assert
+#ifdef assert
+#	undef assert
+#endif
 
 #include "vrt.h"
 #include "bin/varnishd/cache.h"
@@ -11,60 +17,184 @@
 #include "vcc_if.h"
 #include "config.h"
 
+
+enum alphabets {
+	BASE64 = 0,
+	BASE64URL = 1,
+	BASE64URLNOPAD = 2,
+	N_ALPHA
+};
+
+struct e_alphabet {
+	char *b64;
+	char i64[256];
+	char padding;
+} alphabet[N_ALPHA];
+
+
+static void
+VB64_init(struct e_alphabet *alpha)
+{
+	int i;
+	const char *p;
+
+	for (i = 0; i < 256; i++)
+		alpha->i64[i] = -1;
+	for (p = alpha->b64, i = 0; *p; p++, i++)
+		alpha->i64[(int)*p] = (char)i;
+	if (alpha->padding)
+		alpha->i64[alpha->padding] = 0;
+}
+
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
+    	alphabet[BASE64].b64 =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
+		"ghijklmnopqrstuvwxyz0123456789+/";
+	alphabet[BASE64].padding = '=';
+	alphabet[BASE64URL].b64 =
+		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
+		 "ghijklmnopqrstuvwxyz0123456789-_";
+	alphabet[BASE64URL].padding = '=';
+	alphabet[BASE64URLNOPAD].b64 =
+		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
+		 "ghijklmnopqrstuvwxyz0123456789-_";
+	alphabet[BASE64URLNOPAD].padding = 0;
+	VB64_init(&alphabet[BASE64]);
+	VB64_init(&alphabet[BASE64URL]);
+	VB64_init(&alphabet[BASE64URLNOPAD]);
 	return (0);
 }
 
-
-
-/* C89 compliant way to cast 'char' to 'unsigned char'. */
-static inline unsigned char
-to_uchar (char ch)
+/*
+ * Decodes the string s into the buffer d (size dlen), using the alphabet
+ * specified.
+ *
+ * Modified slightly from varnishncsa's decoder. Mainly because the
+ * input-length is known, so padding is optional (this is per the RFC and
+ * allows this code to be used regardless of whether padding is present).
+ * Also returns the length of data when it succeeds.
+ */
+static int
+base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 {
-  return ch;
+	unsigned u, v, l;
+	int i;
+
+	u = 0;
+	l = 0;
+	while (*s) {
+		for (v = 0; v < 4; v++) {
+			if (*s)
+				i = alpha->i64[(int)*s++];
+			else
+				i = 0;
+			if (i < 0)
+				return (-1);
+			u <<= 6;
+			u |= i;
+		}
+		for (v = 0; v < 3; v++) {
+			if (l >= dlen - 1)
+				return (-1);
+			*d = (u >> 16) & 0xff;
+			u <<= 8;
+			l++;
+			d++;
+		}
+		if (!*s)
+			break;
+	}
+	*d = '\0';
+	l++;
+	return (l);
 }
 
 /*
- * Base64 encode IN array of size INLEN into OUT array of size OUTLEN.
- * If OUTLEN is less than BASE64_LENGTH(INLEN), write as many bytes as
- * possible.  If OUTLEN is larger than BASE64_LENGTH(INLEN), also zero
- * terminate the output buffer.
- *
- * Borrowed from, err, Simon Josefsson and the FSF
- * http://cvs.savannah.gnu.org/viewvc/gnulib/gnulib/lib/base64.c?view=markup&content-type=text%2Fvnd.viewcvs-markup&revision=HEAD
- * FIXME: FIX...
+ * Base64-encode *in (size: inlen) into *out, max outlen bytes. If there is
+ * insufficient space, it will bail out and return -1. Otherwise, it will
+ * null-terminate and return the used space.
+ * The alphabet `a` defines... the alphabet. Padding is optional.
+ * Inspired heavily by gnulib/Simon Josefsson (as referenced in RFC4648)
  */
 static size_t
-base64_encode (const char *restrict in, size_t inlen,
-		char *restrict out, size_t outlen)
+base64_encode (struct e_alphabet *alpha, const char *in,
+		size_t inlen, char *out, size_t outlen)
 {
-	static const char b64str[64] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	size_t outlenorig = outlen;
 
-	while (inlen && outlen)
-	{
-		*out++ = b64str[(to_uchar (in[0]) >> 2) & 0x3f];
+	/*
+	 * XXX: These are used to preserve some notion of sanity, and
+	 * hopefully our clever compiler will get rid of them. If that
+	 * turns out to be a problem, the clever compiler is the problem,
+	 * not the code.
+	 */
+	unsigned char tmp[3], idx;
+	while (inlen && outlen) {
+		tmp[0] = (unsigned char) in[0];
+		tmp[1] = (unsigned char) in[1];
+		tmp[2] = (unsigned char) in[2];
+
+		/*
+		 * Outputbyte 1. Easy-peasy.
+		 */
+		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
+
 		if (!--outlen)
-			break;
-		*out++ = b64str[((to_uchar (in[0]) << 4)
-				+ (--inlen ? to_uchar (in[1]) >> 4 : 0))
-			& 0x3f];
+			return -1;
+
+		/*
+		 * Outputbyte 2.
+		 * The "rest" of byte 1, and the start of byte 2, if
+		 * available.
+		 */
+		inlen--;
+		idx = (tmp[0] << 4);
+		if (inlen)
+			idx += (tmp[1] >> 4);
+		idx &= 0x3f;
+		*out++ = alpha->b64[idx];
+			
 		if (!--outlen)
-			break;
-		*out++ =
-			(inlen
-			 ? b64str[((to_uchar (in[1]) << 2)
-				 + (--inlen ? to_uchar (in[2]) >> 6 : 0))
-			 & 0x3f]
-			 : '=');
+			return -1;
+		
+		/*
+		 * The rest of byte 2, if present.
+		 * Ditto for the third byte
+		 */
+		if (inlen) {
+			inlen--;
+			idx = (tmp[1] << 2);
+			if (inlen)
+				idx += tmp[2] >> 6;
+			idx &= 0x3f;
+
+			*out++ = alpha->b64[idx];
+		} else {
+			/*
+			 * If no byte 2 is present, we need to pad.
+			 */
+			if (alpha->padding)
+				*out++ = alpha->padding;
+		}
+
 		if (!--outlen)
-			break;
-		*out++ = inlen ? b64str[to_uchar (in[2]) & 0x3f] : '=';
+			return -1;
+
+		/*
+		 * The remainder of byte three, again, need to pad if no
+		 * byte 3 is present.
+		 */
+		if (inlen) {
+			*out++ = alpha->b64[tmp[2] & 0x3f];
+		} else {
+			if (alpha->padding)
+				*out++ = alpha->padding;
+		}
+
 		if (!--outlen)
-			break;
+			return -1;
 		if (inlen)
 			inlen--;
 		if (inlen)
@@ -121,8 +251,8 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	return hexenc;
 }
 
-const char * __match_proto__ ()
-vmod_base64(struct sess *sp, const char *msg)
+const char *
+vmod_base64_generic(struct sess *sp, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
@@ -131,7 +261,7 @@ vmod_base64(struct sess *sp, const char *msg)
 	 */
 	u = WS_Reserve(sp->ws,0);
 	p = sp->ws->f;
-	u = base64_encode(msg,strlen(msg),p,u);
+	u = base64_encode(&alphabet[a],msg,strlen(msg),p,u);
 	/*
 	 * Not enough space.
 	 */
@@ -143,11 +273,46 @@ vmod_base64(struct sess *sp, const char *msg)
 	return p;
 }
 
-const char * __match_proto__()
-vmod_version(struct sess *sp __attribute__((unused)))
+const char *
+vmod_base64_decode_generic(struct sess *sp, enum alphabets a, const char *msg)
 {
-	return VERSION;
+	char *p;
+	int u;
+	/*
+	 * Base64 encode on the workspace (since it's returned).
+	 */
+	u = WS_Reserve(sp->ws,0);
+	p = sp->ws->f;
+	u = base64_decode(&alphabet[a], p,u,msg);
+	/*
+	 * Not enough space.
+	 */
+	if (u < 0) {
+		WS_Release(sp->ws,0);
+		return NULL;
+	}
+	WS_Release(sp->ws,u);
+	return p;
 }
+
+#define VMOD_ENCODE_FOO(codec_low,codec_big) \
+const char * __match_proto__ () \
+vmod_ ## codec_low (struct sess *sp, const char *msg) \
+{ \
+	assert(msg); \
+	return vmod_base64_generic(sp,codec_big,msg); \
+} \
+\
+const char * __match_proto__ () \
+vmod_ ## codec_low ## _decode (struct sess *sp, const char *msg) \
+{ \
+	assert(msg); \
+	return vmod_base64_decode_generic(sp,codec_big,msg); \
+}
+
+VMOD_ENCODE_FOO(base64,BASE64)
+VMOD_ENCODE_FOO(base64url,BASE64URL)
+VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
 
 #define VMOD_HMAC_FOO(hash,hashup) \
 const char * \
@@ -162,3 +327,12 @@ vmod_hmac_ ## hash(struct sess *sp, const char *key, const char *msg) \
 VMOD_HMAC_FOO(sha256,SHA256)
 VMOD_HMAC_FOO(sha1,SHA1)
 VMOD_HMAC_FOO(md5,MD5)
+
+
+
+const char * __match_proto__()
+vmod_version(struct sess *sp __attribute__((unused)))
+{
+	return VERSION;
+}
+
