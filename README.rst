@@ -61,6 +61,18 @@ Description
 Example
         ``set resp.http.x-data-sig = digest.hmac_sha256("secretkey",resp.http.x-data)``
 
+base64
+------
+
+Prototype
+        digest.base64(<string>);
+Returns
+        String
+Description
+        Returns the base64-encoded version of the input-string
+Example
+        ``set resp.http.x-data = digest.base64(digest.hmac_sha256("secret","data"));``
+
 version
 -------
 

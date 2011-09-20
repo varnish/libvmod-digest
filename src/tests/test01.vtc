@@ -15,15 +15,22 @@ varnish v1 -vcl+backend {
 		set resp.http.sha256 = digest.hmac_sha256("key", "The quick brown fox jumps over the lazy dog");
 		set resp.http.sha1 = digest.hmac_sha1("key", "The quick brown fox jumps over the lazy dog");
 		set resp.http.md5 = digest.hmac_md5("key", "The quick brown fox jumps over the lazy dog");
+		set resp.http.sha256_b64 = digest.base64(digest.hmac_sha256("key", "The quick brown fox jumps over the lazy dog"));
+		set resp.http.sha1_b64 = digest.base64(digest.hmac_sha1("key", "The quick brown fox jumps over the lazy dog"));
+		set resp.http.md5_b64 = digest.base64(digest.hmac_md5("key", "The quick brown fox jumps over the lazy dog"));
 	}
 } -start
 
 client c1 {
 	txreq -url "/"
 	rxresp
-	expect resp.http.sha256 == "MHhmN2JjODNmNDMwNTM4NDI0YjEzMjk4ZTZhYTZmYjE0M2VmNGQ1OWExNDk0NjE3NTk5NzQ3OWRiYzJkMWEzY2Q4"
-	expect resp.http.sha1 == "MHhkZTdjOWI4NWI4Yjc4YWE2YmM4YTdhMzZmNzBhOTA3MDFjOWRiNGQ5"
-	expect resp.http.md5 == "MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ=="
+	expect resp.http.sha256 == "0xf7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+	expect resp.http.sha1 == "0xde7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"
+	expect resp.http.md5 == "0x80070713463e7749b90c2dc24911e275"
+
+	expect resp.http.sha256_b64 == "MHhmN2JjODNmNDMwNTM4NDI0YjEzMjk4ZTZhYTZmYjE0M2VmNGQ1OWExNDk0NjE3NTk5NzQ3OWRiYzJkMWEzY2Q4"
+	expect resp.http.sha1_b64 == "MHhkZTdjOWI4NWI4Yjc4YWE2YmM4YTdhMzZmNzBhOTA3MDFjOWRiNGQ5"
+	expect resp.http.md5_b64 == "MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ=="
 }
 
 client c1 -run

@@ -84,9 +84,9 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	size_t maclen = mhash_get_hash_pblock(hash);
 	size_t blocksize = mhash_get_block_size(hash);
 	unsigned char mac[blocksize];
-	unsigned char hexenc[2*blocksize+3]; // 0x, '\0' + 2 per input
-	unsigned char *hexptr, *p;
-	int j, u;
+	unsigned char *hexenc;
+	unsigned char *hexptr;
+	int j;
 	MHASH td;
 
 	/*
@@ -106,22 +106,32 @@ vmod_hmac_generic(struct sess *sp, hashid hash, const char *key, const char *msg
 	/*
 	 * HEX-encode
 	 */
+	hexenc = WS_Alloc(sp->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
+	if (hexenc == NULL)
+		return NULL;
 	hexptr = hexenc;
 	sprintf(hexptr,"0x");
 	hexptr+=2;
 	for (j = 0; j < blocksize; j++) {
 		sprintf(hexptr,"%.2x", mac[j]);
 		hexptr+=2;
-		assert((hexptr-hexenc)<sizeof(hexenc));
+		assert((hexptr-hexenc)<(2*blocksize + 3));
 	}
 	*hexptr = '\0';
+	return hexenc;
+}
 
+const char * __match_proto__ ()
+vmod_base64(struct sess *sp, const char *msg)
+{
+	char *p;
+	int u;
 	/*
 	 * Base64 encode on the workspace (since it's returned).
 	 */
 	u = WS_Reserve(sp->ws,0);
 	p = sp->ws->f;
-	u = base64_encode(hexenc,strlen(hexenc),p,u);
+	u = base64_encode(msg,strlen(msg),p,u);
 	/*
 	 * Not enough space.
 	 */
