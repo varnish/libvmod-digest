@@ -314,6 +314,61 @@ vmod_base64_decode_generic(struct sess *sp, enum alphabets a, const char *msg)
 	return p;
 }
 
+static const char *
+vmod_hash_generic(struct sess *sp, hashid hash, const char *msg)
+{
+	MHASH td;
+	unsigned char h[mhash_get_block_size(hash)];
+	int i;
+	char *p;
+	char *ptmp;
+	td = mhash_init(hash);
+	mhash(td, msg, strlen(msg));
+	mhash_deinit(td, h);
+	p = WS_Alloc(sp->ws,mhash_get_block_size(hash)*2 + 1);
+	ptmp = p;
+	for (i = 0; i<mhash_get_block_size(hash);i++) {
+		sprintf(ptmp,"%.2x",h[i]);
+		ptmp+=2;
+	}
+	return p;
+}
+
+#define VMOD_HASH_FOO(low, high) \
+const char * __match_proto__ () \
+vmod_hash_ ## low (struct sess *sp, const char *msg) \
+{ \
+	return vmod_hash_generic(sp, MHASH_ ## high, msg); \
+}
+
+VMOD_HASH_FOO(sha1,SHA1)
+VMOD_HASH_FOO(sha224,SHA224)
+VMOD_HASH_FOO(sha256,SHA256)
+VMOD_HASH_FOO(sha384,SHA384)
+VMOD_HASH_FOO(sha512,SHA512)
+VMOD_HASH_FOO(gost,GOST)
+VMOD_HASH_FOO(md2,MD2)
+VMOD_HASH_FOO(md4,MD4)
+VMOD_HASH_FOO(md5,MD5)
+VMOD_HASH_FOO(crc32,CRC32)
+VMOD_HASH_FOO(crc32b,CRC32B)
+VMOD_HASH_FOO(adler32,ADLER32)
+VMOD_HASH_FOO(haval128,HAVAL128)
+VMOD_HASH_FOO(haval160,HAVAL160)
+VMOD_HASH_FOO(haval192,HAVAL192)
+VMOD_HASH_FOO(haval224,HAVAL224)
+VMOD_HASH_FOO(haval256,HAVAL256)
+VMOD_HASH_FOO(ripemd128,RIPEMD128)
+VMOD_HASH_FOO(ripemd160,RIPEMD160)
+VMOD_HASH_FOO(ripemd256,RIPEMD256)
+VMOD_HASH_FOO(ripemd320,RIPEMD320)
+VMOD_HASH_FOO(tiger,TIGER)
+VMOD_HASH_FOO(tiger128,TIGER128)
+VMOD_HASH_FOO(tiger160,TIGER160)
+VMOD_HASH_FOO(snefru128,SNEFRU128)
+VMOD_HASH_FOO(snefru256,SNEFRU256)
+VMOD_HASH_FOO(whirlpool,WHIRLPOOL)
+
 #define VMOD_ENCODE_FOO(codec_low,codec_big) \
 const char * __match_proto__ () \
 vmod_ ## codec_low (struct sess *sp, const char *msg) \
