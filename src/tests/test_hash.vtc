@@ -1,0 +1,254 @@
+varnishtest "Test various hashes"
+
+# Test vectors borrowed from mhash2's test suite.
+# Had to split the test to avoid hitting maxhdr too easily.
+
+server s1 {
+       rxreq
+       txresp
+       rxreq
+       txresp
+       rxreq
+       txresp
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+
+	sub vcl_deliver {
+		if (req.url == "/1") {		
+			set resp.http.CRC32_1 = digest.hash_crc32("checksum");
+			set resp.http.CRC32B_2 = digest.hash_crc32b("checksum");
+			set resp.http.GOST_66 = digest.hash_gost("This is message, length=32 bytes");
+			set resp.http.GOST_67 = digest.hash_gost("Suppose the original message has length = 50 bytes");
+			set resp.http.HAVAL128_17 = digest.hash_haval128("");
+			set resp.http.HAVAL160_16 = digest.hash_haval160("a");
+			set resp.http.HAVAL192_15 = digest.hash_haval192("HAVAL");
+			set resp.http.HAVAL224_14 = digest.hash_haval224("0123456789");
+			set resp.http.HAVAL256_12 = digest.hash_haval256("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.HAVAL256_13 = digest.hash_haval256("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.MD2_101 = digest.hash_md2("");
+			set resp.http.MD2_102 = digest.hash_md2("a");
+			set resp.http.MD2_103 = digest.hash_md2("abc");
+			set resp.http.MD2_104 = digest.hash_md2("message digest");
+			set resp.http.MD2_105 = digest.hash_md2("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.MD2_106 = digest.hash_md2("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.MD2_107 = digest.hash_md2("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.MD4_68 = digest.hash_md4("");
+			set resp.http.MD4_69 = digest.hash_md4("a");
+			set resp.http.MD4_70 = digest.hash_md4("abc");
+			set resp.http.MD4_71 = digest.hash_md4("message digest");
+			set resp.http.MD4_72 = digest.hash_md4("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.MD4_73 = digest.hash_md4("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.MD4_74 = digest.hash_md4("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.MD5_3 = digest.hash_md5("");
+			set resp.http.MD5_4 = digest.hash_md5("a");
+			set resp.http.MD5_5 = digest.hash_md5("abc");
+			set resp.http.MD5_6 = digest.hash_md5("message digest");
+			set resp.http.MD5_7 = digest.hash_md5("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.MD5_8 = digest.hash_md5("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.MD5_9 = digest.hash_md5("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+		} elsif(req.url == "/2") {
+			set resp.http.RIPEMD128_18 = digest.hash_ripemd128("");
+			set resp.http.RIPEMD128_19 = digest.hash_ripemd128("a");
+			set resp.http.RIPEMD128_20 = digest.hash_ripemd128("abc");
+			set resp.http.RIPEMD128_21 = digest.hash_ripemd128("message digest");
+			set resp.http.RIPEMD128_22 = digest.hash_ripemd128("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.RIPEMD128_23 = digest.hash_ripemd128("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.RIPEMD128_24 = digest.hash_ripemd128("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.RIPEMD128_25 = digest.hash_ripemd128("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.RIPEMD160_26 = digest.hash_ripemd160("");
+			set resp.http.RIPEMD160_27 = digest.hash_ripemd160("a");
+			set resp.http.RIPEMD160_28 = digest.hash_ripemd160("abc");
+			set resp.http.RIPEMD160_29 = digest.hash_ripemd160("message digest");
+			set resp.http.RIPEMD160_30 = digest.hash_ripemd160("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.RIPEMD160_31 = digest.hash_ripemd160("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.RIPEMD160_32 = digest.hash_ripemd160("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.RIPEMD160_33 = digest.hash_ripemd160("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.RIPEMD256_34 = digest.hash_ripemd256("");
+			set resp.http.RIPEMD256_35 = digest.hash_ripemd256("a");
+			set resp.http.RIPEMD256_36 = digest.hash_ripemd256("abc");
+			set resp.http.RIPEMD256_37 = digest.hash_ripemd256("message digest");
+			set resp.http.RIPEMD256_38 = digest.hash_ripemd256("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.RIPEMD256_39 = digest.hash_ripemd256("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.RIPEMD256_40 = digest.hash_ripemd256("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+		} elsif(req.url == "/3") {
+			set resp.http.RIPEMD256_41 = digest.hash_ripemd256("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.RIPEMD320_42 = digest.hash_ripemd320("");
+			set resp.http.RIPEMD320_43 = digest.hash_ripemd320("a");
+			set resp.http.RIPEMD320_44 = digest.hash_ripemd320("abc");
+			set resp.http.RIPEMD320_45 = digest.hash_ripemd320("message digest");
+			set resp.http.RIPEMD320_46 = digest.hash_ripemd320("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.RIPEMD320_47 = digest.hash_ripemd320("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.RIPEMD320_48 = digest.hash_ripemd320("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.RIPEMD320_49 = digest.hash_ripemd320("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.SHA1_10 = digest.hash_sha1("abc");
+			set resp.http.SHA1_11 = digest.hash_sha1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.SHA224_78 = digest.hash_sha224("abc");
+			set resp.http.SHA224_79 = digest.hash_sha224("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.SHA256_75 = digest.hash_sha256("abc");
+			set resp.http.SHA256_76 = digest.hash_sha256("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+			set resp.http.SHA256_77 = digest.hash_sha256("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+			set resp.http.SHA384_82 = digest.hash_sha384("abc");
+			set resp.http.SHA384_83 = digest.hash_sha384("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+			set resp.http.SHA512_80 = digest.hash_sha512("abc");
+			set resp.http.SHA512_81 = digest.hash_sha512("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+		} elsif (req.url == "/4") {
+			set resp.http.SNEFRU128_92 = digest.hash_snefru128("abc");
+			set resp.http.SNEFRU128_93 = digest.hash_snefru128("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.SNEFRU128_94 = digest.hash_snefru128("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.SNEFRU128_95 = digest.hash_snefru128("Test message for buffer workflow test(47 bytes)");
+			set resp.http.SNEFRU128_96 = digest.hash_snefru128("Test message for buffer workflow test(48 bytes).");
+			set resp.http.SNEFRU128_97 = digest.hash_snefru128("Test message for buffer workflow test(49 bytes)..");
+			set resp.http.SNEFRU256_100 = digest.hash_snefru256("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.SNEFRU256_98 = digest.hash_snefru256("abc");
+			set resp.http.SNEFRU256_99 = digest.hash_snefru256("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.TIGER128_63 = digest.hash_tiger128("");
+			set resp.http.TIGER128_64 = digest.hash_tiger128("abc");
+			set resp.http.TIGER128_65 = digest.hash_tiger128("Tiger");
+			set resp.http.TIGER160_58 = digest.hash_tiger160("");
+			set resp.http.TIGER160_59 = digest.hash_tiger160("abc");
+			set resp.http.TIGER160_60 = digest.hash_tiger160("Tiger");
+			set resp.http.TIGER160_61 = digest.hash_tiger160("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-");
+			set resp.http.TIGER160_62 = digest.hash_tiger160("ABCDEFGHIJKLMNOPQRSTUVWXYZ=abcdefghijklmnopqrstuvwxyz+0123456789");
+			set resp.http.TIGER_50 = digest.hash_tiger("");
+			set resp.http.TIGER_51 = digest.hash_tiger("abc");
+			set resp.http.TIGER_52 = digest.hash_tiger("Tiger");
+			set resp.http.TIGER_53 = digest.hash_tiger("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-");
+			set resp.http.TIGER_54 = digest.hash_tiger("ABCDEFGHIJKLMNOPQRSTUVWXYZ=abcdefghijklmnopqrstuvwxyz+0123456789");
+			set resp.http.TIGER_55 = digest.hash_tiger("Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham");
+			set resp.http.TIGER_56 = digest.hash_tiger("Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham, proceedings of Fast Software Encryption 3, Cambridge.");
+			set resp.http.TIGER_57 = digest.hash_tiger("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-");
+			set resp.http.WHIRLPOOL_84 = digest.hash_whirlpool("");
+			set resp.http.WHIRLPOOL_85 = digest.hash_whirlpool("a");
+			set resp.http.WHIRLPOOL_86 = digest.hash_whirlpool("abc");
+			set resp.http.WHIRLPOOL_87 = digest.hash_whirlpool("message digest");
+			set resp.http.WHIRLPOOL_88 = digest.hash_whirlpool("abcdefghijklmnopqrstuvwxyz");
+			set resp.http.WHIRLPOOL_89 = digest.hash_whirlpool("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+			set resp.http.WHIRLPOOL_90 = digest.hash_whirlpool("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+			set resp.http.WHIRLPOOL_91 = digest.hash_whirlpool("abcdbcdecdefdefgefghfghighijhijk");
+		}
+	}
+} -start
+
+client c1 {
+	txreq -url "/1"
+	rxresp
+	expect resp.http.CRC32_1 == "7fbeb02e"
+	expect resp.http.CRC32B_2 == "9adf6fde"
+	expect resp.http.GOST_66 == "b1c466d37519b82e8319819ff32595e047a28cb6f83eff1c6916a815a637fffa"
+	expect resp.http.GOST_67 == "471aba57a60a770d3a76130635c1fbea4ef14de51f78b4ae57dd893b62f55208"
+	expect resp.http.HAVAL128_17 == "c68f39913f901f3ddf44c707357a7d70"
+	expect resp.http.HAVAL160_16 == "4da08f514a7275dbc4cece4a347385983983a830"
+	expect resp.http.HAVAL192_15 == "8da26ddab4317b392b22b638998fe65b0fbe4610d345cf89"
+	expect resp.http.HAVAL224_14 == "ee345c97a58190bf0f38bf7ce890231aa5fcf9862bf8e7bebbf76789"
+	expect resp.http.HAVAL256_12 == "72fad4bde1da8c8332fb60561a780e7f504f21547b98686824fc33fc796afa76"
+	expect resp.http.HAVAL256_13 == "899397d96489281e9e76d5e65abab751f312e06c06c07c9c1d42abd31bb6a404"
+	expect resp.http.MD2_101 == "8350e5a3e24c153df2275c9f80692773"
+	expect resp.http.MD2_102 == "32ec01ec4a6dac72c0ab96fb34c0b5d1"
+	expect resp.http.MD2_103 == "da853b0d3f88d99b30283a69e6ded6bb"
+	expect resp.http.MD2_104 == "ab4f496bfb2a530b219ff33031fe06b0"
+	expect resp.http.MD2_105 == "4e8ddff3650292ab5a4108c3aa47940b"
+	expect resp.http.MD2_106 == "da33def2a42df13975352846c30338cd"
+	expect resp.http.MD2_107 == "d5976f79d83d3a0dc9806c3c66f3efd8"
+	expect resp.http.MD4_68 == "31d6cfe0d16ae931b73c59d7e0c089c0"
+	expect resp.http.MD4_69 == "bde52cb31de33e46245e05fbdbd6fb24"
+	expect resp.http.MD4_70 == "a448017aaf21d8525fc10ae87aa6729d"
+	expect resp.http.MD4_71 == "d9130a8164549fe818874806e1c7014b"
+	expect resp.http.MD4_72 == "d79e1c308aa5bbcdeea8ed63df412da9"
+	expect resp.http.MD4_73 == "043f8582f241db351ce627e153e7f0e4"
+	expect resp.http.MD4_74 == "e33b4ddc9c38f2199c3e7b164fcc0536"
+	expect resp.http.MD5_3 == "d41d8cd98f00b204e9800998ecf8427e"
+	expect resp.http.MD5_4 == "0cc175b9c0f1b6a831c399e269772661"
+	expect resp.http.MD5_5 == "900150983cd24fb0d6963f7d28e17f72"
+	expect resp.http.MD5_6 == "f96b697d7cb7938d525a2f31aaf161d0"
+	expect resp.http.MD5_7 == "c3fcd3d76192e4007dfb496cca67e13b"
+	expect resp.http.MD5_8 == "d174ab98d277d9f5a5611c2c9f419d9f"
+	expect resp.http.MD5_9 == "57edf4a22be3c955ac49da2e2107b67a"
+	txreq -url "/2"
+	rxresp
+	expect resp.http.RIPEMD128_18 == "cdf26213a150dc3ecb610f18f6b38b46"
+	expect resp.http.RIPEMD128_19 == "86be7afa339d0fc7cfc785e72f578d33"
+	expect resp.http.RIPEMD128_20 == "c14a12199c66e4ba84636b0f69144c77"
+	expect resp.http.RIPEMD128_21 == "9e327b3d6e523062afc1132d7df9d1b8"
+	expect resp.http.RIPEMD128_22 == "fd2aa607f71dc8f510714922b371834e"
+	expect resp.http.RIPEMD128_23 == "a1aa0689d0fafa2ddc22e88b49133a06"
+	expect resp.http.RIPEMD128_24 == "d1e959eb179c911faea4624c60c5c702"
+	expect resp.http.RIPEMD128_25 == "3f45ef194732c2dbb2c4a2c769795fa3"
+	expect resp.http.RIPEMD160_26 == "9c1185a5c5e9fc54612808977ee8f548b2258d31"
+	expect resp.http.RIPEMD160_27 == "0bdc9d2d256b3ee9daae347be6f4dc835a467ffe"
+	expect resp.http.RIPEMD160_28 == "8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"
+	expect resp.http.RIPEMD160_29 == "5d0689ef49d2fae572b881b123a85ffa21595f36"
+	expect resp.http.RIPEMD160_30 == "f71c27109c692c1b56bbdceb5b9d2865b3708dbc"
+	expect resp.http.RIPEMD160_31 == "12a053384a9c0c88e405a06c27dcf49ada62eb2b"
+	expect resp.http.RIPEMD160_32 == "b0e20b6e3116640286ed3a87a5713079b21f5189"
+	expect resp.http.RIPEMD160_33 == "9b752e45573d4b39f4dbd3323cab82bf63326bfb"
+	expect resp.http.RIPEMD256_34 == "02ba4c4e5f8ecd1877fc52d64d30e37a2d9774fb1e5d026380ae0168e3c5522d"
+	expect resp.http.RIPEMD256_35 == "f9333e45d857f5d90a91bab70a1eba0cfb1be4b0783c9acfcd883a9134692925"
+	expect resp.http.RIPEMD256_36 == "afbd6e228b9d8cbbcef5ca2d03e6dba10ac0bc7dcbe4680e1e42d2e975459b65"
+	expect resp.http.RIPEMD256_37 == "87e971759a1ce47a514d5c914c392c9018c7c46bc14465554afcdf54a5070c0e"
+	expect resp.http.RIPEMD256_38 == "649d3034751ea216776bf9a18acc81bc7896118a5197968782dd1fd97d8d5133"
+	expect resp.http.RIPEMD256_39 == "3843045583aac6c8c8d9128573e7a9809afb2a0f34ccc36ea9e72f16f6368e3f"
+	expect resp.http.RIPEMD256_40 == "5740a408ac16b720b84424ae931cbb1fe363d1d0bf4017f1a89f7ea6de77a0b8"
+	txreq -url "/3"
+	rxresp
+	expect resp.http.RIPEMD256_41 == "06fdcc7a409548aaf91368c06a6275b553e3f099bf0ea4edfd6778df89a890dd"
+	expect resp.http.RIPEMD320_42 == "22d65d5661536cdc75c1fdf5c6de7b41b9f27325ebc61e8557177d705a0ec880151c3a32a00899b8"
+	expect resp.http.RIPEMD320_43 == "ce78850638f92658a5a585097579926dda667a5716562cfcf6fbe77f63542f99b04705d6970dff5d"
+	expect resp.http.RIPEMD320_44 == "de4c01b3054f8930a79d09ae738e92301e5a17085beffdc1b8d116713e74f82fa942d64cdbc4682d"
+	expect resp.http.RIPEMD320_45 == "3a8e28502ed45d422f68844f9dd316e7b98533fa3f2a91d29f84d425c88d6b4eff727df66a7c0197"
+	expect resp.http.RIPEMD320_46 == "cabdb1810b92470a2093aa6bce05952c28348cf43ff60841975166bb40ed234004b8824463e6b009"
+	expect resp.http.RIPEMD320_47 == "d034a7950cf722021ba4b84df769a5de2060e259df4c9bb4a4268c0e935bbc7470a969c9d072a1ac"
+	expect resp.http.RIPEMD320_48 == "ed544940c86d67f250d232c30b7b3e5770e0c60c8cb9a4cafe3b11388af9920e1b99230b843c86a4"
+	expect resp.http.RIPEMD320_49 == "557888af5f6d8ed62ab66945c6d2a0a47ecd5341e915eb8fea1d0524955f825dc717e4a008ab2d42"
+	expect resp.http.SHA1_10 == "a9993e364706816aba3e25717850c26c9cd0d89d"
+	expect resp.http.SHA1_11 == "84983e441c3bd26ebaae4aa1f95129e5e54670f1"
+	expect resp.http.SHA224_78 == "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7"
+	expect resp.http.SHA224_79 == "75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525"
+	expect resp.http.SHA256_75 == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+	expect resp.http.SHA256_76 == "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+	expect resp.http.SHA256_77 == "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"
+	expect resp.http.SHA384_82 == "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7"
+	expect resp.http.SHA384_83 == "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039"
+	expect resp.http.SHA512_80 == "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"
+	expect resp.http.SHA512_81 == "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909"
+	txreq -url "/4"
+	rxresp
+	expect resp.http.SNEFRU128_92 == "553d0648928299a0f22a275a02c83b10"
+	expect resp.http.SNEFRU128_93 == "7840148a66b91c219c36f127a0929606"
+	expect resp.http.SNEFRU128_94 == "d9204ed80bb8430c0b9c244fe485814a"
+	expect resp.http.SNEFRU128_95 == "dd0d1ab288c3c36671044f41c5077ad6"
+	expect resp.http.SNEFRU128_96 == "e7054f05bd72d7e86a052153a17c741d"
+	expect resp.http.SNEFRU128_97 == "9b34204833422df13c83e10a0c6d080a"
+	expect resp.http.SNEFRU256_100 == "d5fce38a152a2d9b83ab44c29306ee45ab0aed0e38c957ec431dab6ed6bb71b8"
+	expect resp.http.SNEFRU256_98 == "7d033205647a2af3dc8339f6cb25643c33ebc622d32979c4b612b02c4903031b"
+	expect resp.http.SNEFRU256_99 == "9304bb2f876d9c4f54546cf7ec59e0a006bead745f08c642f25a7c808e0bf86e"
+	expect resp.http.TIGER128_63 == "24f0130c63ac933216166e76b1bb925f"
+	expect resp.http.TIGER128_64 == "f258c1e88414ab2a527ab541ffc5b8bf"
+	expect resp.http.TIGER128_65 == "9f00f599072300dd276abb38c8eb6dec"
+	expect resp.http.TIGER160_58 == "24f0130c63ac933216166e76b1bb925ff373de2d"
+	expect resp.http.TIGER160_59 == "f258c1e88414ab2a527ab541ffc5b8bf935f7b95"
+	expect resp.http.TIGER160_60 == "9f00f599072300dd276abb38c8eb6dec37790c11"
+	expect resp.http.TIGER160_61 == "87fb2a9083851cf7470d2cf810e6df9eb5864450"
+	expect resp.http.TIGER160_62 == "467db80863ebce488df1cd1261655de957896565"
+	expect resp.http.TIGER_50 == "24f0130c63ac933216166e76b1bb925ff373de2d49584e7a"
+	expect resp.http.TIGER_51 == "f258c1e88414ab2a527ab541ffc5b8bf935f7b951c132951"
+	expect resp.http.TIGER_52 == "9f00f599072300dd276abb38c8eb6dec37790c116f9d2bdf"
+	expect resp.http.TIGER_53 == "87fb2a9083851cf7470d2cf810e6df9eb586445034a5a386"
+	expect resp.http.TIGER_54 == "467db80863ebce488df1cd1261655de957896565975f9197"
+	expect resp.http.TIGER_55 == "0c410a042968868a1671da5a3fd29a725ec1e457d3cdb303"
+	expect resp.http.TIGER_56 == "ebf591d5afa655ce7f22894ff87f54ac89c811b6b0da3193"
+	expect resp.http.TIGER_57 == "00b83eb4e53440c576ac6aaee0a7485825fd15e70a59ffe4"
+	expect resp.http.WHIRLPOOL_84 == "19fa61d75522a4669b44e39c1d2e1726c530232130d407f89afee0964997f7a73e83be698b288febcf88e3e03c4f0757ea8964e59b63d93708b138cc42a66eb3"
+	expect resp.http.WHIRLPOOL_85 == "8aca2602792aec6f11a67206531fb7d7f0dff59413145e6973c45001d0087b42d11bc645413aeff63a42391a39145a591a92200d560195e53b478584fdae231a"
+	expect resp.http.WHIRLPOOL_86 == "4e2448a4c6f486bb16b6562c73b4020bf3043e3a731bce721ae1b303d97e6d4c7181eebdb6c57e277d0e34957114cbd6c797fc9d95d8b582d225292076d4eef5"
+	expect resp.http.WHIRLPOOL_87 == "378c84a4126e2dc6e56dcc7458377aac838d00032230f53ce1f5700c0ffb4d3b8421557659ef55c106b4b52ac5a4aaa692ed920052838f3362e86dbd37a8903e"
+	expect resp.http.WHIRLPOOL_88 == "f1d754662636ffe92c82ebb9212a484a8d38631ead4238f5442ee13b8054e41b08bf2a9251c30b6a0b8aae86177ab4a6f68f673e7207865d5d9819a3dba4eb3b"
+	expect resp.http.WHIRLPOOL_89 == "dc37e008cf9ee69bf11f00ed9aba26901dd7c28cdec066cc6af42e40f82f3a1e08eba26629129d8fb7cb57211b9281a65517cc879d7b962142c65f5a7af01467"
+	expect resp.http.WHIRLPOOL_90 == "466ef18babb0154d25b9d38a6414f5c08784372bccb204d6549c4afadb6014294d5bd8df2a6c44e538cd047b2681a51a2c60481e88c5a20b2c2a80cf3a9a083b"
+	expect resp.http.WHIRLPOOL_91 == "2a987ea40f917061f5d6f0a0e4644f488a7a5a52deee656207c562f988e95c6916bdc8031bc5be1b7b947639fe050b56939baaa0adff9ae6745b7b181c3be3fd"
+}
+
+client c1 -run
