@@ -8,8 +8,8 @@ Varnish Digest Module
 
 :Manual section: 3
 :Author: Kristian Lyngstøl
-:Date: 2011-09-21
-:Version: 0.1
+:Date: 2011-09-22
+:Version: 0.2
 
 SYNOPSIS
 ========
@@ -238,23 +238,27 @@ installation).
 ACKNOWLEDGEMENTS
 ================
 
+Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
+
 This Vmod was written for Media Norge, Schibsted and others.
 
 The bulk of the functionality is acquired through libmhash
 
-Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
-Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
-part of Varnish Cache 3.0 and beyond.
-
 HISTORY
 =======
 
-Version 0.1: Initial version, somewhat ambiguous where it starts and ends.
+Version 0.1: Initial version, mostly feature-complete
+
+Version 0.2: Mainly build-related cleanups, no feature-changes
 
 BUGS
 ====
 
-No bug at all!
+No bugs at all!
+
+The `base64url_nopad_decode()` and `base64url_decode()` functions do not
+differ much. The exception is that nopad_decode() does not know about
+padding at all, and might get confused if the input actually is padded.
 
 SEE ALSO
 ========
