@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 AC_COPYRIGHT([Copyright (c) 2011 Varnish Software AS])
-AC_INIT([libvmod-digest], [trunk])
+AC_INIT([libvmod-digest], [0.1])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/vmod_digest.vcc)
 AM_CONFIG_HEADER(config.h)
@@ -22,6 +22,7 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
+AC_CHECK_LIB(mhash, mhash_count)
 # Check for rst utilities
 AC_CHECK_PROGS(RST2MAN, [rst2man rst2man.py], "no")
 if test "x$RST2MAN" = "xno"; then
@@ -68,6 +69,5 @@ fi
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
-	man/Makefile
 ])
 AC_OUTPUT
