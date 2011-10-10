@@ -9,7 +9,7 @@ Varnish Digest Module
 :Manual section: 3
 :Author: Kristian Lyngstøl
 :Date: 2011-09-22
-:Version: 0.2
+:Version: 0.3
 
 SYNOPSIS
 ========
@@ -251,10 +251,17 @@ Version 0.1: Initial version, mostly feature-complete
 
 Version 0.2: Mainly build-related cleanups, no feature-changes
 
+Version 0.3: Handle empty/NULL strings for hashes and keys.
+
 BUGS
 ====
 
 No bugs at all!
+
+If the key is NULL for hmac-functions, the function will fail and return
+NULL itself, and do no hmac-computation at all. This should be used as an
+indication of some greater flaw in your software/VCL. (I.e.: Your key
+should be under your control, not user-supplied without verification).
 
 The `base64url_nopad_decode()` and `base64url_decode()` functions do not
 differ much. The exception is that nopad_decode() does not know about
