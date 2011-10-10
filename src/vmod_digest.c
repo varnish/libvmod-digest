@@ -167,6 +167,11 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 	if (outlen<4)
 		return -1;
 
+	if (inlen == 0) {
+		*out = '\0';
+		return (1);
+	}
+
 	while (1) {
 		assert(inlen);
 		assert(outlen>3);
@@ -338,6 +343,8 @@ vmod_hash_generic(struct sess *sp, hashid hash, const char *msg)
 const char * __match_proto__ () \
 vmod_hash_ ## low (struct sess *sp, const char *msg) \
 { \
+	if (msg == NULL) \
+		msg = ""; \
 	return vmod_hash_generic(sp, MHASH_ ## high, msg); \
 }
 
@@ -373,14 +380,16 @@ VMOD_HASH_FOO(whirlpool,WHIRLPOOL)
 const char * __match_proto__ () \
 vmod_ ## codec_low (struct sess *sp, const char *msg) \
 { \
-	assert(msg); \
+	if (msg == NULL) \
+		msg = ""; \
 	return vmod_base64_generic(sp,codec_big,msg); \
 } \
 \
 const char * __match_proto__ () \
 vmod_ ## codec_low ## _decode (struct sess *sp, const char *msg) \
 { \
-	assert(msg); \
+	if (msg == NULL) \
+		msg = ""; \
 	return vmod_base64_decode_generic(sp,codec_big,msg); \
 }
 
@@ -392,8 +401,10 @@ VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
 const char * \
 vmod_hmac_ ## hash(struct sess *sp, const char *key, const char *msg) \
 { \
-	assert(msg); \
-	assert(key); \
+	if (msg == NULL) \
+		msg = ""; \
+	if (key == NULL) \
+		key = ""; \
 	return vmod_hmac_generic(sp, MHASH_ ## hashup, key, msg); \
 }
 
