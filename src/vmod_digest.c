@@ -397,6 +397,11 @@ VMOD_ENCODE_FOO(base64,BASE64)
 VMOD_ENCODE_FOO(base64url,BASE64URL)
 VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
 
+/*
+ * XXX: We assume it's better to return a NULL-string if no key is present,
+ * XXX: to avoid having bugs that are "invisible" due to an actual hash
+ * XXX: being made. For the content, blank data is valid.
+ */
 #define VMOD_HMAC_FOO(hash,hashup) \
 const char * \
 vmod_hmac_ ## hash(struct sess *sp, const char *key, const char *msg) \
@@ -404,7 +409,7 @@ vmod_hmac_ ## hash(struct sess *sp, const char *key, const char *msg) \
 	if (msg == NULL) \
 		msg = ""; \
 	if (key == NULL) \
-		key = ""; \
+		return NULL; \
 	return vmod_hmac_generic(sp, MHASH_ ## hashup, key, msg); \
 }
 
