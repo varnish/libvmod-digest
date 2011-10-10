@@ -1,0 +1,25 @@
+varnishtest "Test digest vmod for nullstrings"
+
+# Test vectors borrowed from wikipedia (which is in turn borrowed from
+# rfc2104)
+
+server s1 {
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+
+	sub vcl_deliver {
+		set resp.http.sha1 = digest.hash_sha1(resp.http.blank-header);
+	}
+} -start
+
+client c1 {
+	txreq -url "/"
+	rxresp
+	expect resp.http.sha1 == "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+}
+
+client c1 -run
