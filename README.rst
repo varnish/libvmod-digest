@@ -95,13 +95,13 @@ Prototype
 	        digest.hmac_sha1(<key>, <message>);
 	        digest.hmac_sha256(<key>, <message));
 Returns
-        String
+        String. Hex-encoded prepended with 0x.
 Description
         All the various hmac-functions work the same, but use a different
 	hash mechanism.
 Example
         ::
-        
+
                 set resp.http.x-data-sig = 
                         digest.hmac_sha256("secretkey",resp.http.x-data);
 
@@ -126,7 +126,8 @@ Example
         ::
 
                 set resp.http.x-data-sig = 
-                        digest.base64(digest.hmac_sha256("secret",resp.http.x-data));
+                        digest.base64({"content with
+                        newline in it"});
 
 hash_(algorithm)
 ----------------
@@ -190,12 +191,7 @@ Description
         and practicality.
 Example
         ::
-
-                if (digest.base64_decode(
-                        digest.hmac_sha256("secret",req.http.x-data)
-                        ) == req.http.x-data-sig) {
-                                ...
-                        }
+                synthetic(digest.base64_decode(req.http.x-parrot));
 
 version
 -------
@@ -243,6 +239,8 @@ Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
 This Vmod was written for Media Norge, Schibsted and others.
 
 The bulk of the functionality is acquired through libmhash
+
+Bug reports by: Magnus Hagander
 
 HISTORY
 =======
