@@ -6,8 +6,10 @@ License: BSD
 Group: System Environment/Daemons
 Source0: ./libvmod-digest.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: varnish > 3.0
-BuildRequires: make, autoconf, automake, libtool, python-docutils
+# we need EPEL, or at least mhash + mhash-devel from it:
+# rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-7.noarch.rpm
+Requires: varnish > 3.0, mhash
+BuildRequires: make, autoconf, automake, libtool, python-docutils, mhash-devel
 
 %description
 libvmod-digest
