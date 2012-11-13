@@ -38,8 +38,12 @@ rm -rf %{buildroot}
 # /opt/varnish/lib/varnish/vmods/
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
-#%{_mandir}/man3/*.3*
-/usr/man/man?/*gz
+
+%if "%{RHVERSION}" == "EL5"
+/usr/man/man?/*
+%else
+/usr/share/man/man?/*
+%endif 
 
 %changelog
 * Wed Oct 03 2012 Lasse Karstensen <lasse@varnish-software.com> - 0.1-0.20120918
