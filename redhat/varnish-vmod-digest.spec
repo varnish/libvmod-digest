@@ -39,6 +39,7 @@ rm -rf %{buildroot}
 # /opt/varnish/lib/varnish/vmods/
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
+
 %if "%{RHVERSION}" == "EL5"
 /usr/man/man?/*
 %else
