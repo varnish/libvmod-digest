@@ -1,5 +1,6 @@
-Summary: varnish-vmod-digest
-Name: varnish-vmod-digest
+# %define VARNISHVER 3.0.3
+Summary: libmhash support for Varnish VCL
+Name: vmod-varnish-%{VARNISHVER}-digest
 Version: 0.1
 Release: 1%{?dist}
 License: BSD
@@ -26,7 +27,7 @@ make
 
 %install
 make install DESTDIR=%{buildroot}
-mkdir -p %{buildroot}/usr/share/doc/%{name}/ 
+mkdir -p %{buildroot}/usr/share/doc/%{name}/
 cp README.rst %{buildroot}/usr/share/doc/%{name}/
 cp LICENSE %{buildroot}/usr/share/doc/%{name}/
 
@@ -38,8 +39,11 @@ rm -rf %{buildroot}
 # /opt/varnish/lib/varnish/vmods/
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
-#%{_mandir}/man3/*.3*
-/usr/man/man?/*gz
+%if "%{RHVERSION}" == "EL5"
+/usr/man/man?/*
+%else
+/usr/share/man/man?/*
+%endif
 
 %changelog
 * Wed Oct 03 2012 Lasse Karstensen <lasse@varnish-software.com> - 0.1-0.20120918
