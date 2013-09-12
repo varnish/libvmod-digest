@@ -1,0 +1,12 @@
+Source: libvmod-digest
+Section: web
+Priority: extra
+Maintainer: Kristian Lyngstol <kristian@varnish-software.com>
+Build-Depends: debhelper (>= 7), build-essential, python-docutils, libvarnishapi-dev (>= 3)
+Standards-Version: 3.8.1
+Vcs-Git: https://github.com/varnish/libvmod-digest
+
+Package: libvmod-digest
+Architecture: any
+Depends: varnish (>= 3), ${misc:Depends}
+Description: Akamai EdgeScape geo vmod for Varnish
