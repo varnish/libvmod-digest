@@ -31,5 +31,5 @@ snappy:
 		-d "varnish (3.0.4)" -d "libmhash2" \
 		-m "Ramin Khatibi <ops@snappytv.com>" \
 		--url "https://github.com/snappytv/libvmod-digest" \
-		--description "Varnish vmod for Akamai Geo" \
+		--description "Varnish vmod for generating digests" \
 		-C $(HOME)/installdir/libvmod-digest-1.0 .
