@@ -1,6 +1,5 @@
-# %define VARNISHVER 3.0.3
 Summary: libmhash support for Varnish VCL
-Name: vmod-varnish-%{VARNISHVER}-digest
+Name: vmod-digest
 Version: 0.1
 Release: 1%{?dist}
 License: BSD
