@@ -2,7 +2,7 @@
 language: c
 
 before_install:
- - sudo apt-get install -qq python-docutils
+ - sudo apt-get install -qq python-docutils libmhash-dev
 
 before_script:
   - apt-get source -q varnish
