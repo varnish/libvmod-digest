@@ -1,4 +1,4 @@
-$Module digest Varnish Digest Module
+$Module digest 3 Varnish Digest Module
 $Init init_function
 $Function STRING hmac_sha256(STRING, STRING)
 $Function STRING hmac_sha1(STRING, STRING)
