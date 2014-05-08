@@ -76,7 +76,7 @@ vmod_digest_alpha_init(struct e_alphabet *alpha)
 	for (p = alpha->b64, i = 0; *p; p++, i++)
 		alpha->i64[(int)*p] = (char)i;
 	if (alpha->padding)
-		alpha->i64[alpha->padding] = 0;
+		alpha->i64[(int)alpha->padding] = 0;
 }
 
 int
@@ -232,7 +232,6 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 VCL_STRING
 vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const char *msg)
 {
-	size_t maclen = mhash_get_hash_pblock(hash);
 	size_t blocksize = mhash_get_block_size(hash);
 	unsigned char mac[blocksize];
 	unsigned char *hexenc;
@@ -262,19 +261,19 @@ vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const
 	/*
 	 * HEX-encode
 	 */
-	hexenc = WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
+	hexenc = (unsigned char *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
 	if (hexenc == NULL)
 		return NULL;
 	hexptr = hexenc;
-	sprintf(hexptr,"0x");
+	sprintf((char*)hexptr,"0x");
 	hexptr+=2;
 	for (j = 0; j < blocksize; j++) {
-		sprintf(hexptr,"%.2x", mac[j]);
+		sprintf((char*)hexptr,"%.2x", mac[j]);
 		hexptr+=2;
 		assert((hexptr-hexenc)<(2*blocksize + 3));
 	}
 	*hexptr = '\0';
-	return hexenc;
+	return (const char*)hexenc;
 }
 
 VCL_STRING
