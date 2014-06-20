@@ -1,0 +1,5 @@
+libvmod-digest (1.0) unstable; urgency=low
+
+  * debian build scripts
+
+ -- Ramin Khatibi <ops@snappytv.com>  Wed, 12 Sep 2014 11:46:30 +0700
