@@ -1,3 +1,9 @@
+libvmod-digest (0.4) unstable; urgency=medium
+
+  * Packaging bump.
+
+ -- Lasse Karstensen <lkarsten@varnish-software.com>  Mon, 15 Sep 2014 16:38:30 +0200
+
 libvmod-digest (0.1+nmu1) unstable; urgency=medium
 
   * Packaging bump.

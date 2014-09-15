@@ -1,7 +1,7 @@
 Summary: libmhash support for Varnish %{VARNISHVER}
 Name: vmod-digest
-Version: 0.1
-Release: 4%{?dist}
+Version: 0.4
+Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
 Source0: libvmod-digest.tar.gz
