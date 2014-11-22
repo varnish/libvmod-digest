@@ -47,7 +47,7 @@ VARNISH_VMOD_DIR
 VARNISH_VMODTOOL
 
 AC_PATH_PROG([VARNISHTEST], [varnishtest])
-AC_PATH_PROG([VARNISHD], [varnishd])
+AC_PATH_PROG([VARNISHD], [varnishd], [varnishd], [/sbin:/usr/sbin:/usr/local/sbin:$PATH])
 
 AC_CONFIG_FILES([
 	Makefile
