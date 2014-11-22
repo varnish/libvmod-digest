@@ -1,0 +1,12 @@
+Source: libvmod-digest
+Section: web
+Priority: extra
+Maintainer: Varnish Software <support@varnish-software.com>
+Build-Depends: debhelper (>= 7), build-essential, python-docutils, libmhash-dev,  libvarnishapi-dev (>= 4)
+Standards-Version: 3.8.1
+Vcs-Git: git://github.com/varnish/libvmod-digest.git
+
+Package: libvmod-digest
+Architecture: any
+Depends: varnish (>= 4), ${shlibs:Depends}, ${misc:Depends}, libmhash2 
+Description: libmhash support for Varnish VCL
