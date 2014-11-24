@@ -3,7 +3,7 @@ AM_CPPFLAGS = @VMOD_INCLUDES@
 vmoddir = @VMOD_DIR@
 vmod_LTLIBRARIES = libvmod_digest.la
 
-libvmod_digest_la_LDFLAGS = -module -export-dynamic -avoid-version -lmhash
+libvmod_digest_la_LDFLAGS = -module -export-dynamic -avoid-version -shared -lmhash
 
 libvmod_digest_la_SOURCES = \
 	vcc_if.c \
@@ -13,10 +13,10 @@ libvmod_digest_la_SOURCES = \
 vcc_if.c vcc_if.h: @VMODTOOL@ $(top_srcdir)/src/vmod_digest.vcc
 	@VMODTOOL@ $(top_srcdir)/src/vmod_digest.vcc
 
-VMOD_TESTS = tests/*.vtc
+VMOD_TESTS = $(top_srcdir)/src/tests/*.vtc
 .PHONY: $(VMOD_TESTS)
 
-tests/*.vtc:
+$(top_srcdir)/src/tests/*.vtc:
 	@VARNISHTEST@ -Dvarnishd=@VARNISHD@ -Dvmod_topbuild=$(abs_top_builddir) $@
 
 check: $(VMOD_TESTS)

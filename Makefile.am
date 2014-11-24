@@ -2,9 +2,13 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = src
 
+DISTCHECK_CONFIGURE_FLAGS = \
+        VMOD_DIR='$${libdir}/varnish/vmods'
+
 dist_man_MANS = vmod_digest.3
 MAINTAINERCLEANFILES = $(dist_man_MANS)
-doc_DATA = README.rst LICENSE
+
+EXTRA_DIST = README.rst LICENSE vmod-digest.spec debian
 
 vmod_digest.3: README.rst
 if HAVE_RST2MAN
@@ -15,3 +19,5 @@ else
 	@echo "========================================"
 	@false
 endif
+
+
