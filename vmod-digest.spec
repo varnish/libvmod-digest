@@ -1,6 +1,6 @@
 Summary: libmhash support for Varnish VCL
 Name: vmod-digest
-Version: 0.1
+Version: 0.3
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -17,7 +17,7 @@ BuildRequires: mhash-devel
 digest VMOD
 
 %prep
-%setup -n libvmod-digest-trunk
+%setup -n libvmod-digest-%{version}
 
 %build
 %configure --prefix=/usr/
