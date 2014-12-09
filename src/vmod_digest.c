@@ -273,7 +273,7 @@ vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const
 		assert((hexptr-hexenc)<(2*blocksize + 3));
 	}
 	*hexptr = '\0';
-	return (const char*)hexenc;
+	return (const char *)hexenc;
 }
 
 VCL_STRING
