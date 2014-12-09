@@ -187,7 +187,7 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 			idx += (tmp[1] >> 4);
 		idx &= 0x3f;
 		*out++ = alpha->b64[idx];
-			
+
 		if (inlen>1) {
 			idx = (tmp[1] << 2);
 			if (inlen>2)
@@ -218,7 +218,7 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 
 		if (inlen<4)
 			break;
-		
+
 		inlen -= 3;
 		in += 3;
 	}
@@ -257,7 +257,7 @@ vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const
 		mhash_get_hash_pblock(hash));
 	mhash(td, msg, strlen(msg));
 	mhash_hmac_deinit(td,mac);
-	
+
 	/*
 	 * HEX-encode
 	 */
@@ -284,10 +284,10 @@ vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg
 
 	assert(msg);
 	assert(a<N_ALPHA);
-	
+
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
-	
+
 	u = WS_Reserve(ctx->ws,0);
 	p = ctx->ws->f;
 	u = base64_encode(&alphabet[a],msg,strlen(msg),p,u);
@@ -307,7 +307,7 @@ vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const ch
 
 	assert(msg);
 	assert(a<N_ALPHA);
-	
+
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 
@@ -429,4 +429,3 @@ vmod_version(const struct vrt_ctx *ctx  __attribute__((unused)))
 {
 	return VERSION;
 }
-
