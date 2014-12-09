@@ -261,7 +261,7 @@ vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const
 	/*
 	 * HEX-encode
 	 */
-	hexenc = (unsigned char *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
+	hexenc = (void *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
 	if (hexenc == NULL)
 		return NULL;
 	hexptr = hexenc;
