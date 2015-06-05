@@ -336,6 +336,7 @@ vmod_hash_generic(const struct vrt_ctx *ctx, hashid hash, const char *msg)
 	mhash(td, msg, strlen(msg));
 	mhash_deinit(td, h);
 	p = WS_Alloc(ctx->ws,mhash_get_block_size(hash)*2 + 1);
+	AN(p);
 	ptmp = p;
 	for (i = 0; i<mhash_get_block_size(hash);i++) {
 		sprintf(ptmp,"%.2x",h[i]);
