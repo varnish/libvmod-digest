@@ -213,22 +213,32 @@ Example
 INSTALLATION
 ============
 
-Installation requires the Varnish source tree (only the source matching the
-binary installation).
+The source tree is based on autotools to configure the building, and
+does also have the necessary bits in place to do functional unit tests
+using the ``varnishtest`` tool.
 
-1. `./autogen.sh`  (for git-installation)
-2. `./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache`
-3. `make`
-4. `make install` (may require root: sudo make install)
-5. `make check` (Optional for regression tests)
+Building requires the Varnish header files and uses pkg-config to find
+the necessary paths.
 
-VARNISHSRCDIR is the directory of the Varnish source tree for which to
-compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
-will be added to the include search paths for your module.
+Usage::
 
-Optionally you can also set the vmod install dir by adding VMODDIR=DIR
-(defaults to the pkg-config discovered directory from your Varnish
-installation).
+ ./autogen.sh
+ ./configure
+
+If you have installed Varnish to a non-standard directory, call
+``autogen.sh`` and ``configure`` with ``PKG_CONFIG_PATH`` pointing to
+the appropriate path. For example, when varnishd configure was called
+with ``--prefix=$PREFIX``, use
+
+ PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+ export PKG_CONFIG_PATH
+
+Make targets:
+
+* make - builds the vmod.
+* make install - installs your vmod.
+* make check - runs the unit tests in ``src/tests/*.vtc``
+* make distcheck - run check and prepare a tarball of the vmod.
 
 
 ACKNOWLEDGEMENTS
