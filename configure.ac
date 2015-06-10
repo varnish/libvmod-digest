@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 AC_COPYRIGHT([Copyright (c) 2011-2015 Varnish Software AS])
-AC_INIT([libvmod-digest], [0.3])
+AC_INIT([libvmod-digest], [trunk])
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifndef([VARNISH_VMOD_INCLUDES], AC_MSG_ERROR([Need varnish.m4]))
 AC_CONFIG_SRCDIR(src/vmod_digest.vcc)
@@ -31,9 +31,6 @@ if test "x$RST2MAN" = "xno"; then
 	AC_MSG_WARN([rst2man not found - not building man pages])
 fi
 AM_CONDITIONAL(HAVE_RST2MAN, [test "x$RST2MAN" != "xno"])
-
-# Check for pkg-config
-PKG_PROG_PKG_CONFIG
 
 # Checks for header files.
 AC_HEADER_STDC
