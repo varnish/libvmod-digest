@@ -1,0 +1,39 @@
+varnishtest "Test hmac_sha1_base64 necessary for Amazon S3 authentication"
+
+# http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
+
+server s1 {
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+
+	sub vcl_deliver {
+      set req.http.aws_http_verb = "GET";
+      set req.http.aws_content_md5 = "";
+      set req.http.aws_content_type = "";
+      set req.http.aws_date = "Tue, 27 Mar 2007 19:36:42 +0000";
+      set req.http.aws_canonicalizedresource = "/johnsmith/photos/puppy.jpg";
+
+      set req.http.aws_accesskeyid = "AKIAIOSFODNN7EXAMPLE";
+      set req.http.aws_secretaccesskey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+		
+		set req.http.sha1 = digest.hmac_sha1_base64(req.http.aws_secretaccesskey, req.http.aws_http_verb + {"
+"} + req.http.aws_content_md5 + {"
+"} + req.http.aws_content_type + {"
+"} + req.http.aws_date + {"
+"} + req.http.aws_canonicalizedresource);
+
+		set resp.http.authorization = "AWS " + req.http.aws_accesskeyid + ":" + req.http.sha1;
+	}
+} -start
+
+client c1 {
+	txreq -url "/"
+	rxresp
+	expect resp.http.authorization == "AWS AKIAIOSFODNN7EXAMPLE:bWq2s1WEIj+Ydj0vQ697zp+IXMU="
+}
+
+client c1 -run

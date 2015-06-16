@@ -49,6 +49,14 @@
 #include "vcc_if.h"
 #include "config.h"
 
+enum encoding {
+	ENC_BASE64 = 0,
+	ENC_BASE64URL = 1,
+	ENC_BASE64URLNOPAD = 2,
+	ENC_HEX = 3,
+	ENC_N_ENC
+};
+
 enum alphabets {
 	BASE64 = 0,
 	BASE64URL = 1,
@@ -82,7 +90,7 @@ vmod_digest_alpha_init(struct e_alphabet *alpha)
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
-    	alphabet[BASE64].b64 =
+	alphabet[BASE64].b64 =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		"ghijklmnopqrstuvwxyz0123456789+/";
 	alphabet[BASE64].padding = '=';
@@ -229,55 +237,9 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 	return outlenorig-outlen;
 }
 
-VCL_STRING
-vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const char *msg)
-{
-	size_t blocksize = mhash_get_block_size(hash);
-	unsigned char mac[blocksize];
-	unsigned char *hexenc;
-	unsigned char *hexptr;
-	int j;
-	MHASH td;
-
-	assert(msg);
-	assert(key);
-	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
-	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
-
-	/*
-	 * XXX: From mhash(3):
-	 * size_t mhash_get_hash_pblock(hashid type);
-	 *     It returns the block size that the algorithm operates. This
-	 *     is used in mhash_hmac_init. If the return value is 0 you
-	 *     shouldn't use that algorithm in  HMAC.
-	 */
-	assert(mhash_get_hash_pblock(hash) > 0);
-
-	td = mhash_hmac_init(hash, (void *) key, strlen(key),
-		mhash_get_hash_pblock(hash));
-	mhash(td, msg, strlen(msg));
-	mhash_hmac_deinit(td,mac);
-
-	/*
-	 * HEX-encode
-	 */
-	hexenc = (void *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
-	if (hexenc == NULL)
-		return NULL;
-	hexptr = hexenc;
-	sprintf((char*)hexptr,"0x");
-	hexptr+=2;
-	for (j = 0; j < blocksize; j++) {
-		sprintf((char*)hexptr,"%.2x", mac[j]);
-		hexptr+=2;
-		assert((hexptr-hexenc)<(2*blocksize + 3));
-	}
-	*hexptr = '\0';
-	return (const char *)hexenc;
-}
 
 VCL_STRING
-vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg)
+vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg, size_t msglen)
 {
 	char *p;
 	int u;
@@ -290,7 +252,7 @@ vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg
 
 	u = WS_Reserve(ctx->ws,0);
 	p = ctx->ws->f;
-	u = base64_encode(&alphabet[a],msg,strlen(msg),p,u);
+	u = base64_encode(&alphabet[a],msg,msglen,p,u);
 	if (u < 0) {
 		WS_Release(ctx->ws,0);
 		return NULL;
@@ -320,6 +282,60 @@ vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const ch
 	}
 	WS_Release(ctx->ws,u);
 	return p;
+}
+
+VCL_STRING
+vmod_hex_encode(const struct vrt_ctx *ctx, unsigned char *in, size_t inlen)
+{
+	unsigned char *hexenc;
+	unsigned char *hexptr;
+	int j;
+
+	hexenc = (void *)WS_Alloc(ctx->ws, 2*inlen+3); // 0x, '\0' + 2 per input
+	if (hexenc == NULL)
+		return NULL;
+	hexptr = hexenc;
+	sprintf((char*)hexptr,"0x");
+	hexptr+=2;
+	for (j = 0; j < inlen; j++) {
+		sprintf((char*)hexptr,"%.2x", in[j]);
+		hexptr+=2;
+		assert((hexptr-hexenc)<(2*inlen + 3));
+	}
+	*hexptr = '\0';
+	return (const char *)hexenc;
+}
+
+VCL_STRING
+vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const char *msg, enum encoding enc)
+{
+	size_t blocksize = mhash_get_block_size(hash);
+	unsigned char mac[blocksize];
+	MHASH td;
+
+	assert(msg);
+	assert(key);
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
+	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
+
+	/*
+	 * XXX: From mhash(3):
+	 * size_t mhash_get_hash_pblock(hashid type);
+	 *		 It returns the block size that the algorithm operates. This
+	 *		 is used in mhash_hmac_init. If the return value is 0 you
+	 *		 shouldn't use that algorithm in  HMAC.
+	 */
+	assert(mhash_get_hash_pblock(hash) > 0);
+
+	td = mhash_hmac_init(hash, (void *) key, strlen(key), mhash_get_hash_pblock(hash));
+	mhash(td, msg, strlen(msg));
+	mhash_hmac_deinit(td,mac);
+
+   if (enc == ENC_HEX) {
+		return vmod_hex_encode(ctx, mac, blocksize);
+   } else {
+		return vmod_base64_generic(ctx, (enum alphabets)enc, (char*)mac, blocksize);
+   }
 }
 
 VCL_STRING
@@ -388,7 +404,7 @@ vmod_ ## codec_low (const struct vrt_ctx *ctx, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_generic(ctx,codec_big,msg); \
+	return vmod_base64_generic(ctx,codec_big,msg,strlen(msg)); \
 } \
 \
 const char * __match_proto__ () \
@@ -408,7 +424,7 @@ VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
  * XXX: to avoid having bugs that are "invisible" due to an actual hash
  * XXX: being made. For the content, blank data is valid.
  */
-#define VMOD_HMAC_FOO(hash,hashup) \
+#define VMOD_HMAC_FOO(hash,hashup,encoding) \
 VCL_STRING \
 vmod_hmac_ ## hash(const struct vrt_ctx *ctx, const char *key, const char *msg) \
 { \
@@ -416,13 +432,14 @@ vmod_hmac_ ## hash(const struct vrt_ctx *ctx, const char *key, const char *msg) 
 		msg = ""; \
 	if (key == NULL) \
 		return NULL; \
-	return vmod_hmac_generic(ctx, MHASH_ ## hashup, key, msg); \
+	return vmod_hmac_generic(ctx, MHASH_ ## hashup, key, msg, encoding); \
 }
 
 
-VMOD_HMAC_FOO(sha256,SHA256)
-VMOD_HMAC_FOO(sha1,SHA1)
-VMOD_HMAC_FOO(md5,MD5)
+VMOD_HMAC_FOO(sha256,SHA256,ENC_HEX)
+VMOD_HMAC_FOO(sha1,SHA1,ENC_HEX)
+VMOD_HMAC_FOO(md5,MD5,ENC_HEX)
+VMOD_HMAC_FOO(sha1_base64,SHA1,ENC_BASE64)
 
 
 VCL_STRING __match_proto__()
