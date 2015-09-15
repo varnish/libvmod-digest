@@ -4,7 +4,7 @@ Version: 0.3
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
-Source0: libvmod-digest.tar.gz
+Source0: libvmod-digest-trunk.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish >= 4.0.2
 BuildRequires: make
@@ -17,7 +17,7 @@ BuildRequires: mhash-devel
 digest VMOD
 
 %prep
-%setup -n libvmod-digest-%{version}
+%setup -n libvmod-digest-trunk
 
 %build
 %configure --prefix=/usr/
@@ -26,9 +26,7 @@ make check
 
 %install
 make install DESTDIR=%{buildroot}
-mkdir -p %{buildroot}/usr/share/doc/%{name}/
-cp README.rst %{buildroot}/usr/share/doc/%{name}/
-cp LICENSE %{buildroot}/usr/share/doc/%{name}/
+mv %{buildroot}/usr/share/doc/lib%{name}/ %{buildroot}/usr/share/doc/%{name}/
 
 %clean
 rm -rf %{buildroot}
