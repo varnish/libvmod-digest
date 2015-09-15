@@ -44,6 +44,7 @@
 #	undef assert
 #endif
 
+#include "vcl.h"
 #include "vrt.h"
 #include "cache/cache.h"
 #include "vcc_if.h"
@@ -80,8 +81,11 @@ vmod_digest_alpha_init(struct e_alphabet *alpha)
 }
 
 int
-init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
+init_function(VRT_CTX, struct vmod_priv *priv, enum vcl_event_e e)
 {
+	if (e != VCL_EVENT_LOAD)
+		return (0);
+
     	alphabet[BASE64].b64 =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		"ghijklmnopqrstuvwxyz0123456789+/";
