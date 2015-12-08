@@ -60,6 +60,7 @@ static struct e_alphabet {
 	char *b64;
 	char i64[256];
 	char padding;
+        char *digest_hex_chars;
 } alphabet[N_ALPHA];
 
 /*
@@ -86,14 +87,17 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		"ghijklmnopqrstuvwxyz0123456789+/";
 	alphabet[BASE64].padding = '=';
+        alphabet[BASE64].digest_hex_chars = "0123456789abcdef";
 	alphabet[BASE64URL].b64 =
 		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		 "ghijklmnopqrstuvwxyz0123456789-_";
 	alphabet[BASE64URL].padding = '=';
+        alphabet[BASE64URL].digest_hex_chars = "0123456789abcdef";
 	alphabet[BASE64URLNOPAD].b64 =
 		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		 "ghijklmnopqrstuvwxyz0123456789-_";
 	alphabet[BASE64URLNOPAD].padding = 0;
+        alphabet[BASE64URLNOPAD].digest_hex_chars = "0123456789abcdef";
 	vmod_digest_alpha_init(&alphabet[BASE64]);
 	vmod_digest_alpha_init(&alphabet[BASE64URL]);
 	vmod_digest_alpha_init(&alphabet[BASE64URLNOPAD]);
@@ -110,7 +114,7 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
  * Also returns the length of data when it succeeds.
  */
 static int
-base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
+base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s, int as_hex )
 {
 	unsigned u, v, l;
 	int i;
@@ -131,10 +135,23 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 		for (v = 0; v < 3; v++) {
 			if (l >= dlen - 1)
 				return (-1);
-			*d = (u >> 16) & 0xff;
+			unsigned c = (u >> 16) & 0xff;
+			if (as_hex) {
+				if (c > 0) {
+					*d = alpha->digest_hex_chars[(c >> 4) & 0x0F];
+					d++;
+					*d = (char)alpha->digest_hex_chars[c & 0x0F];
+					d++;
+					l++;
+					l++;
+				}
+			}
+			else {
+				*d = c;
+				l++;
+				d++;
+			}
 			u <<= 8;
-			l++;
-			d++;
 		}
 		if (!*s)
 			break;
@@ -300,7 +317,7 @@ vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg
 }
 
 VCL_STRING
-vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg)
+vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg, int as_hex)
 {
 	char *p;
 	int u;
@@ -313,7 +330,7 @@ vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const ch
 
 	u = WS_Reserve(ctx->ws,0);
 	p = ctx->ws->f;
-	u = base64_decode(&alphabet[a], p,u,msg);
+	u = base64_decode(&alphabet[a], p,u,msg, as_hex);
 	if (u < 0) {
 		WS_Release(ctx->ws,0);
 		return NULL;
@@ -392,12 +409,20 @@ vmod_ ## codec_low (const struct vrt_ctx *ctx, const char *msg) \
 } \
 \
 const char * __match_proto__ () \
+vmod_ ## codec_low ## _decode_hex (const struct vrt_ctx *ctx, const char *msg) \
+{ \
+	if (msg == NULL) \
+		msg = ""; \
+	return vmod_base64_decode_generic(ctx,codec_big,msg,1); \
+}\
+\
+const char * __match_proto__ () \
 vmod_ ## codec_low ## _decode (const struct vrt_ctx *ctx, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_decode_generic(ctx,codec_big,msg); \
-}
+	return vmod_base64_decode_generic(ctx,codec_big,msg,0); \
+}\
 
 VMOD_ENCODE_FOO(base64,BASE64)
 VMOD_ENCODE_FOO(base64url,BASE64URL)

@@ -23,6 +23,7 @@ varnish v1 -vcl+backend {
 		set resp.http.md5_clean = digest.base64_decode(resp.http.md5_b64);
 		set resp.http.md5_b64url_nopad = digest.base64url_nopad("0x80070713463e7749b90c2dc24911e275");
 		set resp.http.clean_nopad = digest.base64url_decode("MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ");
+		set resp.http.clean_nopad_hex = digest.base64url_decode_hex("MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ");
 		
 		# Used to test +/ vs -_. The decoded variant is russian (I
 		# think)
@@ -50,8 +51,10 @@ client c1 {
 	expect resp.http.md5_clean == "0x80070713463e7749b90c2dc24911e275"
 	
 	expect resp.http.clean_nopad == "0x80070713463e7749b90c2dc24911e275"
+	expect resp.http.clean_nopad_hex == "307838303037303731333436336537373439623930633264633234393131653237350000"
 	expect resp.http.md5_b64url_nopad == "MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ"
 	expect resp.http.ruski_url == "zprOsc67z47PgiDOv8-Bzq_Pg86xz4TOtQ"
+       
 
 	expect resp.http.hash_md5 == "3858f62230ac3c915f300c664312c63f"
 }
