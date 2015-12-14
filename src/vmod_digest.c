@@ -49,6 +49,7 @@
 #undef PACKAGE_STRING
 #undef PACKAGE_TARNAME
 #undef PACKAGE_VERSION
+#undef VERSION
 
 #include "vcl.h"
 #include "vrt.h"
