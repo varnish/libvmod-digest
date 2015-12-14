@@ -51,7 +51,6 @@
 #undef PACKAGE_VERSION
 #undef VERSION
 
-#include "vcl.h"
 #include "vrt.h"
 #include "cache/cache.h"
 #include "vcc_if.h"
@@ -88,13 +87,10 @@ vmod_digest_alpha_init(struct e_alphabet *alpha)
 }
 
 int
-init_function(VRT_CTX, struct vmod_priv *priv, enum vcl_event_e e)
+init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
-	(void)ctx;
 	(void)priv;
-
-	if (e != VCL_EVENT_LOAD)
-		return (0);
+	(void)conf;
 
     	alphabet[BASE64].b64 =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
