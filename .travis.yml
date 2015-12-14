@@ -13,5 +13,5 @@ before_install:
   - sudo apt-get install varnish libvarnishapi-dev
   - ./autogen.sh
 script:
-  - ./configure && make CFLAGS="-Wall -Wextra -Werror" &&
+  - ./configure && make CFLAGS="-Wall -Wextra" &&
     make check VERBOSE=1
