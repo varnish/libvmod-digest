@@ -51,7 +51,7 @@ client c1 {
 	expect resp.http.md5_clean == "0x80070713463e7749b90c2dc24911e275"
 	
 	expect resp.http.clean_nopad == "0x80070713463e7749b90c2dc24911e275"
-	expect resp.http.clean_nopad_hex == "307838303037303731333436336537373439623930633264633234393131653237350000"
+	expect resp.http.clean_nopad_hex == "30783830303730373133343633653737343962393063326463323439313165323735"
 	expect resp.http.md5_b64url_nopad == "MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ"
 	expect resp.http.ruski_url == "zprOsc67z47PgiDOv8-Bzq_Pg86xz4TOtQ"
        
