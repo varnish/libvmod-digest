@@ -80,7 +80,7 @@ Example VCL::
 		if (digest.hmac_sha256("key",req.http.x-some-header) !=
 			digest.hmac_sha256("key",req.http.x-some-header-signed))
 		{
-			error 401 "Naughty user!";
+			return (synth(401, "Naughty user!"));
 		}
 	}
 
