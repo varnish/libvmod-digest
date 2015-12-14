@@ -244,7 +244,7 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 }
 
 VCL_STRING
-vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const char *msg)
+vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
 {
 	size_t blocksize = mhash_get_block_size(hash);
 	unsigned char mac[blocksize];
@@ -291,7 +291,7 @@ vmod_hmac_generic(const struct vrt_ctx *ctx, hashid hash, const char *key, const
 }
 
 VCL_STRING
-vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg)
+vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
@@ -314,7 +314,7 @@ vmod_base64_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg
 }
 
 VCL_STRING
-vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const char *msg)
+vmod_base64_decode_generic(VRT_CTX, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
@@ -337,7 +337,7 @@ vmod_base64_decode_generic(const struct vrt_ctx *ctx, enum alphabets a, const ch
 }
 
 VCL_STRING
-vmod_hash_generic(const struct vrt_ctx *ctx, hashid hash, const char *msg)
+vmod_hash_generic(VRT_CTX, hashid hash, const char *msg)
 {
 	MHASH td;
 	unsigned char h[mhash_get_block_size(hash)];
@@ -361,7 +361,7 @@ vmod_hash_generic(const struct vrt_ctx *ctx, hashid hash, const char *msg)
 
 #define VMOD_HASH_FOO(low, high) \
 VCL_STRING __match_proto__ () \
-vmod_hash_ ## low (const struct vrt_ctx *ctx, const char *msg) \
+vmod_hash_ ## low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
@@ -398,7 +398,7 @@ VMOD_HASH_FOO(whirlpool,WHIRLPOOL)
 
 #define VMOD_ENCODE_FOO(codec_low,codec_big) \
 VCL_STRING __match_proto__ () \
-vmod_ ## codec_low (const struct vrt_ctx *ctx, const char *msg) \
+vmod_ ## codec_low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
@@ -406,7 +406,7 @@ vmod_ ## codec_low (const struct vrt_ctx *ctx, const char *msg) \
 } \
 \
 const char * __match_proto__ () \
-vmod_ ## codec_low ## _decode (const struct vrt_ctx *ctx, const char *msg) \
+vmod_ ## codec_low ## _decode (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
@@ -424,7 +424,7 @@ VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
  */
 #define VMOD_HMAC_FOO(hash,hashup) \
 VCL_STRING \
-vmod_hmac_ ## hash(const struct vrt_ctx *ctx, const char *key, const char *msg) \
+vmod_hmac_ ## hash(VRT_CTX, const char *key, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
@@ -440,7 +440,8 @@ VMOD_HMAC_FOO(md5,MD5)
 
 
 VCL_STRING __match_proto__()
-vmod_version(const struct vrt_ctx *ctx  __attribute__((unused)))
+vmod_version(VRT_CTX)
 {
+	(void)ctx;
 	return VERSION;
 }
