@@ -90,6 +90,9 @@ vmod_digest_alpha_init(struct e_alphabet *alpha)
 int
 init_function(VRT_CTX, struct vmod_priv *priv, enum vcl_event_e e)
 {
+	(void)ctx;
+	(void)priv;
+
 	if (e != VCL_EVENT_LOAD)
 		return (0);
 
