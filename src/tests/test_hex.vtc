@@ -1,0 +1,48 @@
+varnishtest "Test base64 hex encoding"
+
+server s1 {
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+
+	sub vcl_deliver {
+		set resp.http.hmac_sha1 = digest.hmac_sha1("secret", "test string");
+		set resp.http.hmac_sha1_b64 = digest.base64(digest.hmac_sha1("secret", "test string"));
+		set resp.http.hmac_sha1_b64_hex = digest.base64_hex(digest.hmac_sha1("secret", "test string"));
+
+		set resp.http.md5 = digest.hash_md5("test string");
+		set resp.http.md5_b64 = digest.base64(digest.hash_md5("test string"));
+		set resp.http.md5_b64_hex = digest.base64_hex(digest.hash_md5("test string"));
+
+		set resp.http.test1_b64 = digest.base64("TeST");
+		set resp.http.test1_b64_hex = digest.base64_hex("0x54655354");
+
+		set resp.http.test1_b64_url = digest.base64url("Interesting!");
+		set resp.http.test1_b64_url_hex = digest.base64url_hex("0x496E746572657374696E6721");
+
+		set resp.http.test1_b64_unopad = digest.base64url_nopad("$");
+		set resp.http.test1_b64_unopad_hex = digest.base64url_nopad_hex("0x24");
+	}
+} -start
+
+client c1 {
+	txreq -url "/"
+	rxresp
+
+	expect resp.http.hmac_sha1 == "0xdd26bfddf122c1055d4cd5b054227727e1e3eecf"
+	expect resp.http.hmac_sha1_b64 == "MHhkZDI2YmZkZGYxMjJjMTA1NWQ0Y2Q1YjA1NDIyNzcyN2UxZTNlZWNm"
+	expect resp.http.hmac_sha1_b64_hex == "3Sa/3fEiwQVdTNWwVCJ3J+Hj7s8="
+
+	expect resp.http.md5 == "6f8db599de986fab7a21625b7916589c"
+	expect resp.http.md5_b64 == "NmY4ZGI1OTlkZTk4NmZhYjdhMjE2MjViNzkxNjU4OWM="
+	expect resp.http.md5_b64_hex == "b421md6Yb6t6IWJbeRZYnA=="
+
+	expect resp.http.test1_b64 == resp.http.test1_b64_hex
+	expect resp.http.test1_b64_url == resp.http.test1_b64_url_hex
+	expect resp.http.test1_b64_unopad == resp.http.test1_b64_unopad_hex
+}
+
+client c1 -run
