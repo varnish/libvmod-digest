@@ -142,8 +142,8 @@ Returns
         String
 Description
         Returns the base64-encoded version of the hex encoded input-string. The
-        input-string can start with an optional 0x. Input is hex-decoded and
-        the encoding is identical to base64, base64url, and base64url_nopad.
+        input-string can start with an optional 0x. Input is hex-decoded into binary
+        and the encoding is identical to base64, base64url, and base64url_nopad.
 Example
         ::
 

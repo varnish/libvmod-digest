@@ -20,11 +20,11 @@ varnish v1 -vcl+backend {
 		set resp.http.test1_b64 = digest.base64("TeST");
 		set resp.http.test1_b64_hex = digest.base64_hex("0x54655354");
 
-		set resp.http.test1_b64_url = digest.base64url("Interesting!");
-		set resp.http.test1_b64_url_hex = digest.base64url_hex("0x496E746572657374696E6721");
+		set resp.http.test2_b64_url = digest.base64url("Interesting!");
+		set resp.http.test2_b64_url_hex = digest.base64url_hex("496E746572657374696E6721");
 
-		set resp.http.test1_b64_unopad = digest.base64url_nopad("$");
-		set resp.http.test1_b64_unopad_hex = digest.base64url_nopad_hex("0x24");
+		set resp.http.test3_b64_unopad = digest.base64url_nopad("$");
+		set resp.http.test3_b64_unopad_hex = digest.base64url_nopad_hex("0x24");
 	}
 } -start
 
@@ -41,8 +41,8 @@ client c1 {
 	expect resp.http.md5_b64_hex == "b421md6Yb6t6IWJbeRZYnA=="
 
 	expect resp.http.test1_b64 == resp.http.test1_b64_hex
-	expect resp.http.test1_b64_url == resp.http.test1_b64_url_hex
-	expect resp.http.test1_b64_unopad == resp.http.test1_b64_unopad_hex
+	expect resp.http.test2_b64_url == resp.http.test2_b64_url_hex
+	expect resp.http.test3_b64_unopad == resp.http.test3_b64_unopad_hex
 }
 
 client c1 -run
