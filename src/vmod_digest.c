@@ -159,6 +159,49 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 }
 
 /*
+ * Convert a hex character into an int
+ */
+inline unsigned char
+char_to_int (char c)
+{
+	if (c >= '0' && c <= '9')
+	{
+		return c - '0';
+	}
+	else if (c >= 'a' && c <= 'f')
+	{
+		return c - 87;
+	}
+	else if (c >= 'A' && c <= 'F')
+	{
+		return c - 55;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/*
+ * Convert a hex value into an 8bit int
+ */
+unsigned char
+hex_to_int (const char *in, size_t inlen, size_t offset)
+{
+	unsigned char value = 0;
+
+	if(offset >= inlen)
+	{
+		return 0;
+	}
+
+	value = char_to_int(in[offset]) << 4;
+	value += char_to_int(in[offset + 1]);
+
+	return value;
+}
+
+/*
  * Base64-encode *in (size: inlen) into *out, max outlen bytes. If there is
  * insufficient space, it will bail out and return -1. Otherwise, it will
  * null-terminate and return the used space.
@@ -173,7 +216,7 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
  */
 static size_t
 base64_encode (struct e_alphabet *alpha, const char *in,
-		size_t inlen, char *out, size_t outlen)
+		size_t inlen, int is_hex, char *out, size_t outlen)
 {
 	size_t outlenorig = outlen;
 	unsigned char tmp[3], idx;
@@ -186,13 +229,40 @@ base64_encode (struct e_alphabet *alpha, const char *in,
 		return (1);
 	}
 
+	if (is_hex && inlen > 2 && in[0] == '0' && in[1] == 'x')
+	{
+		in += 2;
+		inlen -= 2;
+	}
+
 	while (1) {
 		assert(inlen);
 		assert(outlen>3);
 
-		tmp[0] = (unsigned char) in[0];
-		tmp[1] = (unsigned char) in[1];
-		tmp[2] = (unsigned char) in[2];
+		if(is_hex)
+		{
+			tmp[0] = hex_to_int(in, inlen, 0);
+			tmp[1] = hex_to_int(in, inlen, 2);
+			tmp[2] = hex_to_int(in, inlen, 4);
+
+			in += 3;
+
+			//fix the padding calculation
+			if(inlen <= 6)
+			{
+				inlen /= 2;
+			}
+			else
+			{
+				inlen -= 3;
+			}
+		}
+		else
+		{
+			tmp[0] = (unsigned char) in[0];
+			tmp[1] = (unsigned char) in[1];
+			tmp[2] = (unsigned char) in[2];
+		}
 
 		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
 
@@ -291,7 +361,7 @@ vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
 }
 
 VCL_STRING
-vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg)
+vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 {
 	char *p;
 	int u;
@@ -304,7 +374,7 @@ vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg)
 
 	u = WS_Reserve(ctx->ws,0);
 	p = ctx->ws->f;
-	u = base64_encode(&alphabet[a],msg,strlen(msg),p,u);
+	u = base64_encode(&alphabet[a],msg,strlen(msg),is_hex,p,u);
 	if (u < 0) {
 		WS_Release(ctx->ws,0);
 		return NULL;
@@ -402,7 +472,15 @@ vmod_ ## codec_low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_generic(ctx,codec_big,msg); \
+	return vmod_base64_generic(ctx,codec_big,msg, 0); \
+} \
+\
+VCL_STRING __match_proto__ () \
+vmod_ ## codec_low ## _hex (VRT_CTX, const char *msg) \
+{ \
+	if (msg == NULL) \
+		msg = ""; \
+	return vmod_base64_generic(ctx,codec_big,msg, 1); \
 } \
 \
 const char * __match_proto__ () \

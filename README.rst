@@ -129,6 +129,27 @@ Example
                         digest.base64({"content with
                         newline in it"});
 
+base64_hex, base64_url_hex, base64url_nopad_hex
+-----------------------------------------------
+
+Prototype
+        ::
+
+                digest.base64_hex(<string>);
+                digest.base64url_hex(<string>);
+                digest.base64url_nopad_hex(<string>);
+Returns
+        String
+Description
+        Returns the base64-encoded version of the hex encoded input-string. The
+        input-string can start with an optional 0x. Input is hex-decoded into binary
+        and the encoding is identical to base64, base64url, and base64url_nopad.
+Example
+        ::
+
+                set resp.http.x-data-sig =
+                        digest.base64_hex("0xdd26bfddf122c1055d4c");
+
 hash_(algorithm)
 ----------------
 
