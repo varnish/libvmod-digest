@@ -161,7 +161,7 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 /*
  * Convert a hex character into an int
  */
-inline unsigned char
+unsigned char
 char_to_int (char c)
 {
 	if (c >= '0' && c <= '9')
