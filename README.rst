@@ -25,6 +25,9 @@ SYNOPSIS
         digest.base64(<string>);
         digest.base64url(<string>);
         digest.base64url_nopad(<string>);
+        digest.base64_hex(<string>);
+        digest.base64url_hex(<string>);
+        digest.base64url_nopad_hex(<string>);
         digest.base64_decode(<string>);
         digest.base64url_decode(<string>);
         digest.base64url_nopad_decode(<string>);
@@ -129,7 +132,7 @@ Example
                         digest.base64({"content with
                         newline in it"});
 
-base64_hex, base64_url_hex, base64url_nopad_hex
+base64_hex, base64url_hex, base64url_nopad_hex
 -----------------------------------------------
 
 Prototype
