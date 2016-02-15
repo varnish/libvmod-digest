@@ -320,7 +320,7 @@ vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
 	unsigned char mac[blocksize];
 	unsigned char *hexenc;
 	unsigned char *hexptr;
-	int j;
+	size_t j;
 	MHASH td;
 
 	assert(msg);
@@ -354,7 +354,7 @@ vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
 	for (j = 0; j < blocksize; j++) {
 		sprintf((char*)hexptr,"%.2x", mac[j]);
 		hexptr+=2;
-		assert((hexptr-hexenc)<(2*blocksize + 3));
+		assert((hexptr-hexenc)<(2*(long)blocksize + 3));
 	}
 	*hexptr = '\0';
 	return (const char *)hexenc;
@@ -411,7 +411,7 @@ vmod_hash_generic(VRT_CTX, hashid hash, const char *msg)
 {
 	MHASH td;
 	unsigned char h[mhash_get_block_size(hash)];
-	int i;
+	unsigned int i;
 	char *p;
 	char *ptmp;
 
