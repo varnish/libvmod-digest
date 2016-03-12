@@ -30,7 +30,7 @@
  * Digest vmod for Varnish, using libmhash.
  * See README.rst for usage.
  */
-
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -56,6 +56,10 @@
 #include "cache/cache.h"
 #include "vcc_if.h"
 #include "config.h"
+
+#ifndef MIN
+#define MIN(a,b) ((a) > (b) ? (b) : (a))
+#endif
 
 enum alphabets {
 	BASE64 = 0,
@@ -186,17 +190,16 @@ char_to_int (char c)
  * Convert a hex value into an 8bit int
  */
 unsigned char
-hex_to_int (const char *in, size_t inlen, size_t offset)
+hex_to_int(const char *in, size_t inlen)
 {
 	unsigned char value = 0;
 
-	if(offset >= inlen)
-	{
+	if (inlen < 2) {
 		return 0;
 	}
 
-	value = char_to_int(in[offset]) << 4;
-	value += char_to_int(in[offset + 1]);
+	value = char_to_int(in[0]) << 4;
+	value += char_to_int(in[1]);
 
 	return value;
 }
@@ -207,110 +210,112 @@ hex_to_int (const char *in, size_t inlen, size_t offset)
  * null-terminate and return the used space.
  * The alphabet `a` defines... the alphabet. Padding is optional.
  * Inspired heavily by gnulib/Simon Josefsson (as referenced in RFC4648)
- *
- * XXX: tmp[] and idx are used to ensure the reader (and author) retains
- * XXX: a limited amount of sanity. They are strictly speaking not
- * XXX: necessary, if you don't mind going crazy.
- *
- * FIXME: outlenorig is silly. Flip the logic.
  */
 static size_t
-base64_encode (struct e_alphabet *alpha, const char *in,
-		size_t inlen, int is_hex, char *out, size_t outlen)
+base64_encode(struct e_alphabet *alpha, const char *in,
+    size_t inlen, int is_hex, char *out, size_t outlen)
 {
-	size_t outlenorig = outlen;
-	unsigned char tmp[3], idx;
+	size_t out_used = 0;
 
-	if (outlen<4)
-		return -1;
-
+	/* Empty in, empty out. */
 	if (inlen == 0) {
 		*out = '\0';
 		return (1);
 	}
 
-	if (is_hex && inlen > 2 && in[0] == '0' && in[1] == 'x')
-	{
+	/*
+	 * If reading a hex string, if "0x" is present, strip. When no further
+	 * characters follow, we return an empty output string.
+	 */
+	if (is_hex && inlen > 2 && in[0] == '0' && in[1] == 'x') {
 		in += 2;
 		inlen -= 2;
 	}
 
-	while (1) {
-		assert(inlen);
-		assert(outlen>3);
+	/*
+	 * B64 requires 4*ceil(n/3) bytes of space + 1 nul terminator
+	 * byte to generate output for a given input length n. When is_hex is
+	 * set, each character of inlen represents half a byte, hence the
+	 * division by 6.
+	 */
+	if ((!is_hex && outlen < 4 * ((inlen / 3) + MIN(inlen % 3, 1)) + 1) ||
+	    (is_hex && outlen < 4 * ((inlen / 6) + MIN((inlen / 2) % 3, 1)) + 1)) {
+		return -1;
+	}
 
-		if(is_hex)
-		{
-			tmp[0] = hex_to_int(in, inlen, 0);
-			tmp[1] = hex_to_int(in, inlen, 2);
-			tmp[2] = hex_to_int(in, inlen, 4);
+	while ((!is_hex && inlen) || (is_hex && inlen >= 2)) {
+		unsigned char tmp[3] = {0, 0, 0};
+		unsigned char idx;
+		int min_avail = is_hex ? MIN(inlen, 6) : MIN(inlen, 3);
+		int nread = 0;
 
-			in += 3;
+		if (is_hex) {
+			tmp[0] = hex_to_int(in, inlen);
+			in += 2;
+			inlen -= 2;
+			nread++;
 
-			//fix the padding calculation
-			if(inlen <= 6)
-			{
-				inlen /= 2;
+			if (min_avail >= 4) {
+				tmp[1] = hex_to_int(in, inlen);
+				in += 2;
+				inlen -= 2;
+				nread++;
 			}
-			else
-			{
-				inlen -= 3;
+
+			if (min_avail >= 6) {
+				tmp[2] = hex_to_int(in, inlen);
+				in += 2;
+				inlen -= 2;
+				nread++;
 			}
-		}
-		else
-		{
-			tmp[0] = (unsigned char) in[0];
-			tmp[1] = (unsigned char) in[1];
-			tmp[2] = (unsigned char) in[2];
+		} else {
+			memcpy(tmp, in, min_avail);
+			in += min_avail;
+			inlen -= min_avail;
+			nread = min_avail;
 		}
 
 		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
 
 		idx = (tmp[0] << 4);
-		if (inlen>1)
+		if (nread > 1) {
 			idx += (tmp[1] >> 4);
+		}
 		idx &= 0x3f;
 		*out++ = alpha->b64[idx];
 
-		if (inlen>1) {
+		if (nread > 1) {
 			idx = (tmp[1] << 2);
-			if (inlen>2)
+			if (nread > 2) {
 				idx += tmp[2] >> 6;
+			}
 			idx &= 0x3f;
 
 			*out++ = alpha->b64[idx];
 		} else {
-			if (alpha->padding)
+			if (alpha->padding) {
 				*out++ = alpha->padding;
+			}
 		}
 
-		if (inlen>2) {
+		if (nread > 2) {
 			*out++ = alpha->b64[tmp[2] & 0x3f];
 		} else {
-			if (alpha->padding)
+			if (alpha->padding) {
 				*out++ = alpha->padding;
+			}
 		}
 
-		/*
-		 * XXX: Only consume 4 bytes, but since we need a fifth for
-		 * XXX: NULL later on, we might as well test here.
-		 */
-		if (outlen<5)
-			return -1;
-
-		outlen -= 4;
-
-		if (inlen<4)
-			break;
-
-		inlen -= 3;
-		in += 3;
+		if (alpha->padding) {
+			out_used += 4;
+		} else {
+			out_used += 2 + (nread - 1);
+		}
 	}
 
-	assert(outlen);
-	outlen--;
 	*out = '\0';
-	return outlenorig-outlen;
+
+	return out_used + 1;
 }
 
 VCL_STRING
