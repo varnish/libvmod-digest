@@ -194,9 +194,7 @@ hex_to_int(const char *in, size_t inlen)
 {
 	unsigned char value = 0;
 
-	if (inlen < 2) {
-		return 0;
-	}
+	assert(inlen >= 2);
 
 	value = char_to_int(in[0]) << 4;
 	value += char_to_int(in[1]);
