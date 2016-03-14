@@ -207,12 +207,6 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 {
 	size_t out_used = 0;
 
-	/* Empty in, empty out. */
-	if (inlen == 0) {
-		*out = '\0';
-		return (1);
-	}
-
 	/*
 	 * If reading a hex string, if "0x" is present, strip. When no further
 	 * characters follow, we return an empty output string.
