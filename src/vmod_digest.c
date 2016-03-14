@@ -169,21 +169,13 @@ unsigned char
 char_to_int (char c)
 {
 	if (c >= '0' && c <= '9')
-	{
 		return c - '0';
-	}
 	else if (c >= 'a' && c <= 'f')
-	{
 		return c - 87;
-	}
 	else if (c >= 'A' && c <= 'F')
-	{
 		return c - 55;
-	}
 	else
-	{
 		return 0;
-	}
 }
 
 /*
@@ -237,9 +229,8 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 	 * division by 6.
 	 */
 	if ((!is_hex && outlen < 4 * (inlen + 2 / 3) + 1) ||
-	    ( is_hex && outlen < 4 * (inlen + 5 / 6) + 1)) {
+	    ( is_hex && outlen < 4 * (inlen + 5 / 6) + 1))
 		return -1;
-	}
 
 	while ((!is_hex && inlen) || (is_hex && inlen >= 2)) {
 		unsigned char tmp[3] = {0, 0, 0};
@@ -276,39 +267,30 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
 
 		idx = (tmp[0] << 4);
-		if (nread > 1) {
+		if (nread > 1)
 			idx += (tmp[1] >> 4);
-		}
 		idx &= 0x3f;
 		*out++ = alpha->b64[idx];
 
 		if (nread > 1) {
 			idx = (tmp[1] << 2);
-			if (nread > 2) {
+			if (nread > 2)
 				idx += tmp[2] >> 6;
-			}
 			idx &= 0x3f;
 
 			*out++ = alpha->b64[idx];
-		} else {
-			if (alpha->padding) {
-				*out++ = alpha->padding;
-			}
-		}
+		} else if (alpha->padding)
+			*out++ = alpha->padding;
 
-		if (nread > 2) {
+		if (nread > 2)
 			*out++ = alpha->b64[tmp[2] & 0x3f];
-		} else {
-			if (alpha->padding) {
-				*out++ = alpha->padding;
-			}
-		}
+		else if (alpha->padding)
+			*out++ = alpha->padding;
 
-		if (alpha->padding) {
+		if (alpha->padding)
 			out_used += 4;
-		} else {
+		else
 			out_used += 2 + (nread - 1);
-		}
 	}
 
 	*out = '\0';
