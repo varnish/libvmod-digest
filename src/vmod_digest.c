@@ -231,25 +231,15 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 		unsigned char idx;
 		int min_avail = is_hex ? MIN(inlen, 6) : MIN(inlen, 3);
 		int nread = 0;
+		int off = 0;
 
 		if (is_hex) {
-			tmp[0] = hex_to_int(in, inlen);
-			in += 2;
-			inlen -= 2;
-			nread++;
-
-			if (min_avail >= 4) {
-				tmp[1] = hex_to_int(in, inlen);
+			while (min_avail >= 2) {
+				tmp[off++] = hex_to_int(in, inlen);
 				in += 2;
 				inlen -= 2;
 				nread++;
-			}
-
-			if (min_avail >= 6) {
-				tmp[2] = hex_to_int(in, inlen);
-				in += 2;
-				inlen -= 2;
-				nread++;
+				min_avail -= 2;
 			}
 		} else {
 			memcpy(tmp, in, min_avail);
