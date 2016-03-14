@@ -165,7 +165,7 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 /*
  * Convert a hex character into an int
  */
-unsigned char
+static unsigned char
 char_to_int (char c)
 {
 	if (c >= '0' && c <= '9')
@@ -181,7 +181,7 @@ char_to_int (char c)
 /*
  * Convert a hex value into an 8bit int
  */
-unsigned char
+static unsigned char
 hex_to_int(const char *in, size_t inlen)
 {
 	unsigned char value = 0;
