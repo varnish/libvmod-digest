@@ -236,8 +236,8 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 	 * set, each character of inlen represents half a byte, hence the
 	 * division by 6.
 	 */
-	if ((!is_hex && outlen < 4 * ((inlen / 3) + MIN(inlen % 3, 1)) + 1) ||
-	    (is_hex && outlen < 4 * ((inlen / 6) + MIN((inlen / 2) % 3, 1)) + 1)) {
+	if ((!is_hex && outlen < 4 * (inlen + 2 / 3) + 1) ||
+	    ( is_hex && outlen < 4 * (inlen + 5 / 6) + 1)) {
 		return -1;
 	}
 
