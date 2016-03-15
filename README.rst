@@ -8,8 +8,8 @@ Varnish Digest Module
 
 :Manual section: 3
 :Author: Kristian Lyngstøl
-:Date: 2011-09-22
-:Version: 0.3
+:Date: 2016-03-16
+:Version: 1.0.1
 
 SYNOPSIS
 ========
@@ -265,25 +265,15 @@ Make targets:
 * make distcheck - run check and prepare a tarball of the vmod.
 
 
-ACKNOWLEDGEMENTS
-================
+AUTHOR
+======
 
-Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
+Original author: Kristian Lyngstøl <kristian@varnish-software.com>.
 
 This Vmod was written for Media Norge, Schibsted and others.
 
-The bulk of the functionality is acquired through libmhash
+The bulk of the functionality is acquired through libmhash.
 
-Bug reports by: Magnus Hagander
-
-HISTORY
-=======
-
-Version 0.1: Initial version, mostly feature-complete
-
-Version 0.2: Mainly build-related cleanups, no feature-changes
-
-Version 0.3: Handle empty/NULL strings for hashes and keys.
 
 BUGS
 ====
@@ -306,11 +296,3 @@ SEE ALSO
 * varnishd(1)
 * vcl(7)
 * https://github.com/varnish/libvmod-digest
-
-COPYRIGHT
-=========
-
-This document is licensed under the same license as the
-libvmod-digest project. See LICENSE for details.
-
-* Copyright (c) 2011 Varnish Software
