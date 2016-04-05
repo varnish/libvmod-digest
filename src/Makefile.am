@@ -1,4 +1,4 @@
-AM_CPPFLAGS = @VMOD_INCLUDES@ -Wall -Wextra
+AM_CPPFLAGS = @VMOD_INCLUDES@ -Wall -Wextra -Werror
 
 vmoddir = @VMOD_DIR@
 vmod_LTLIBRARIES = libvmod_digest.la
