@@ -61,6 +61,10 @@
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
 #endif
 
+#ifndef VRT_CTX
+#define VRT_CTX		const struct vrt_ctx *ctx
+#endif
+
 enum alphabets {
 	BASE64 = 0,
 	BASE64URL = 1,
