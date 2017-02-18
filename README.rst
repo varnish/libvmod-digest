@@ -80,8 +80,7 @@ Example VCL::
 	import digest;
 
 	sub vcl_recv {
-		if (digest.hmac_sha256("key",req.http.x-some-header) !=
-			digest.hmac_sha256("key",req.http.x-some-header-signed))
+		if (digest.hmac_sha256("key",req.http.x-data) != req.http.x-data-sig)
 		{
 			return (synth(401, "Naughty user!"));
 		}
