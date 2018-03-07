@@ -1,5 +1,15 @@
 This is a running log of changes to libvmod-digest.
 
+libvmod-digest 1.0.2 (2017-03-07)
+---------------------------------
+
+* Small docs and compilation fixes.
+
+* Added compatibility with Varnish Cache 6.0
+
+This release was tested with Varnish Cache 4.1.9 and trunk (2018-03-07)
+
+
 libvmod-digest 1.0.1 (2016-03-15)
 ---------------------------------
 
