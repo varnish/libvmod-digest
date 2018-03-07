@@ -30,6 +30,9 @@
  * Digest vmod for Varnish, using libmhash.
  * See README.rst for usage.
  */
+
+#include "config.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -43,19 +46,19 @@
 #ifdef assert
 #	undef assert
 #endif
-#undef PACKAGE
-#undef PACKAGE_BUGREPORT
-#undef PACKAGE_NAME
-#undef PACKAGE_STRING
-#undef PACKAGE_TARNAME
-#undef PACKAGE_VERSION
-#undef VERSION
 
-#include "vcl.h"
-#include "vrt.h"
-#include "cache/cache.h"
+#include <cache/cache.h>
+#include <vcl.h>
+
+#ifndef VRT_H_INCLUDED
+#  include <vrt.h>
+#endif
+
+#ifndef VDEF_H_INCLUDED
+#  include <vdef.h>
+#endif
+
 #include "vcc_if.h"
-#include "config.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
@@ -403,7 +406,7 @@ vmod_hash_generic(VRT_CTX, hashid hash, const char *msg)
 }
 
 #define VMOD_HASH_FOO(low, high) \
-VCL_STRING __match_proto__ () \
+VCL_STRING \
 vmod_hash_ ## low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
@@ -440,7 +443,7 @@ VMOD_HASH_FOO(snefru256,SNEFRU256)
 VMOD_HASH_FOO(whirlpool,WHIRLPOOL)
 
 #define VMOD_ENCODE_FOO(codec_low,codec_big) \
-VCL_STRING __match_proto__ () \
+VCL_STRING \
 vmod_ ## codec_low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
@@ -448,7 +451,7 @@ vmod_ ## codec_low (VRT_CTX, const char *msg) \
 	return vmod_base64_generic(ctx,codec_big,msg, 0); \
 } \
 \
-VCL_STRING __match_proto__ () \
+VCL_STRING \
 vmod_ ## codec_low ## _hex (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
@@ -456,7 +459,7 @@ vmod_ ## codec_low ## _hex (VRT_CTX, const char *msg) \
 	return vmod_base64_generic(ctx,codec_big,msg, 1); \
 } \
 \
-const char * __match_proto__ () \
+const char * \
 vmod_ ## codec_low ## _decode (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
@@ -490,7 +493,7 @@ VMOD_HMAC_FOO(sha1,SHA1)
 VMOD_HMAC_FOO(md5,MD5)
 
 
-VCL_STRING __match_proto__()
+VCL_STRING
 vmod_version(VRT_CTX)
 {
 	(void)ctx;
