@@ -9,7 +9,7 @@ Varnish Digest Module
 :Manual section: 3
 :Author: Kristian Lyngstøl
 :Date: 2016-03-16
-:Version: 1.0.1
+:Version: 1.0.2
 
 SYNOPSIS
 ========
@@ -17,7 +17,7 @@ SYNOPSIS
 ::
 
         import digest;
-        
+
         digest.hmac_md5(<key>,<message>);
         digest.hmac_sha1(<key>, <message>);
         digest.hmac_sha256(<key>, <message));
@@ -104,7 +104,7 @@ Description
 Example
         ::
 
-                set resp.http.x-data-sig = 
+                set resp.http.x-data-sig =
                         digest.hmac_sha256("secretkey",resp.http.x-data);
 
 base64, base64url, base64url_nopad
@@ -127,7 +127,7 @@ Description
 Example
         ::
 
-                set resp.http.x-data-sig = 
+                set resp.http.x-data-sig =
                         digest.base64({"content with
                         newline in it"});
 
@@ -157,7 +157,7 @@ hash_(algorithm)
 
 Prototype
         ::
-        
+
                 digest.hash_sha1(<string>);
                 digest.hash_sha224(<string>);
                 digest.hash_sha256(<string>);
@@ -192,8 +192,8 @@ Description
         detailed discussions, see The Internet.
 Example
         ::
-                
-                set resp.http.x-data-md5 = 
+
+                set resp.http.x-data-md5 =
                         digest.hash_md5(resp.http.x-data);
 
 base64_decode, base64url_decode, base64url_nopad_decode
@@ -201,7 +201,7 @@ base64_decode, base64url_decode, base64url_nopad_decode
 
 Prototype
         ::
-        
+
                 digest.base64_decode(<string>);
                 digest.base64url_decode(<string>);
                 digest.base64url_nopad_decode(<string>);
@@ -229,7 +229,7 @@ Description
         Returns the string constant version-number of the digest vmod.
 Example
         ::
-                
+
                 set resp.http.X-digest-version = digest.version();
 
 
