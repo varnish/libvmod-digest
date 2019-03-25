@@ -63,9 +63,9 @@
 #include "vcc_if.h"
 /* Varnish < 6.2 compat */
 #ifndef VPFX
-#define VPFX(a) VPFX() ## a
-#define VARGS(a) VPFX() ## a ## _arg
-#define VENUM(a) VPFX(enum_) ## a
+#define VPFX(a) vmod_ ## a
+#define VARGS(a) vmod_ ## a ## _arg
+#define VENUM(a) vmod_enum_ ## a
 #endif
 
 #ifndef MIN
@@ -107,7 +107,7 @@ VPFX(digest_alpha_init)(struct e_alphabet *alpha)
 }
 
 int
-init_function(VRT_CTX, struct vmod_priv *priv, enum vcl_event_e e)
+init_function(VRT_CTX, struct VPFX(priv) *priv, enum vcl_event_e e)
 {
 	(void)ctx;
 	(void)priv;
@@ -486,7 +486,7 @@ VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
  */
 #define VMOD_HMAC_FOO(hash,hashup) \
 VCL_STRING \
-vmod_hmac ## hash(VRT_CTX, const char *key, const char *msg) \
+vmod_hmac_ ## hash(VRT_CTX, const char *key, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
