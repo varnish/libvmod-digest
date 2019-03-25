@@ -36,6 +36,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
+
 #include <stdio.h>
 
 /*
@@ -59,6 +61,12 @@
 #endif
 
 #include "vcc_if.h"
+/* Varnish < 6.2 compat */
+#ifndef VPFX
+#define VPFX(a) VPFX() ## a
+#define VARGS(a) VPFX() ## a ## _arg
+#define VENUM(a) VPFX(enum_) ## a
+#endif
 
 #ifndef MIN
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
@@ -85,7 +93,7 @@ static struct e_alphabet {
  * Initializes the reverse lookup-table for the relevant base-N alphabet.
  */
 static void
-vmod_digest_alpha_init(struct e_alphabet *alpha)
+VPFX(digest_alpha_init)(struct e_alphabet *alpha)
 {
 	int i;
 	const char *p;
@@ -119,9 +127,9 @@ init_function(VRT_CTX, struct vmod_priv *priv, enum vcl_event_e e)
 		 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 		 "ghijklmnopqrstuvwxyz0123456789-_";
 	alphabet[BASE64URLNOPAD].padding = 0;
-	vmod_digest_alpha_init(&alphabet[BASE64]);
-	vmod_digest_alpha_init(&alphabet[BASE64URL]);
-	vmod_digest_alpha_init(&alphabet[BASE64URLNOPAD]);
+	VPFX(digest_alpha_init)(&alphabet[BASE64]);
+	VPFX(digest_alpha_init)(&alphabet[BASE64URL]);
+	VPFX(digest_alpha_init)(&alphabet[BASE64URLNOPAD]);
 	return (0);
 }
 
@@ -290,7 +298,7 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 }
 
 VCL_STRING
-vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
+VPFX(hmac_generic)(VRT_CTX, hashid hash, const char *key, const char *msg)
 {
 	size_t blocksize = mhash_get_block_size(hash);
 	unsigned char mac[blocksize];
@@ -337,7 +345,7 @@ vmod_hmac_generic(VRT_CTX, hashid hash, const char *key, const char *msg)
 }
 
 VCL_STRING
-vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
+VPFX(base64_generic)(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 {
 	char *p;
 	int u;
@@ -360,7 +368,7 @@ vmod_base64_generic(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 }
 
 VCL_STRING
-vmod_base64_decode_generic(VRT_CTX, enum alphabets a, const char *msg)
+VPFX(base64_decode_generic)(VRT_CTX, enum alphabets a, const char *msg)
 {
 	char *p;
 	int u;
@@ -383,7 +391,7 @@ vmod_base64_decode_generic(VRT_CTX, enum alphabets a, const char *msg)
 }
 
 VCL_STRING
-vmod_hash_generic(VRT_CTX, hashid hash, const char *msg)
+VPFX(hash_generic)(VRT_CTX, hashid hash, const char *msg)
 {
 	MHASH td;
 	unsigned char h[mhash_get_block_size(hash)];
@@ -411,7 +419,7 @@ vmod_hash_ ## low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_hash_generic(ctx, MHASH_ ## high, msg); \
+	return VPFX(hash_generic)(ctx, MHASH_ ## high, msg); \
 }
 
 VMOD_HASH_FOO(sha1,SHA1)
@@ -448,7 +456,7 @@ vmod_ ## codec_low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_generic(ctx,codec_big,msg, 0); \
+	return VPFX(base64_generic)(ctx,codec_big,msg, 0); \
 } \
 \
 VCL_STRING \
@@ -456,7 +464,7 @@ vmod_ ## codec_low ## _hex (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_generic(ctx,codec_big,msg, 1); \
+	return VPFX(base64_generic)(ctx,codec_big,msg, 1); \
 } \
 \
 const char * \
@@ -464,7 +472,7 @@ vmod_ ## codec_low ## _decode (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return vmod_base64_decode_generic(ctx,codec_big,msg); \
+	return VPFX(base64_decode_generic)(ctx,codec_big,msg); \
 }
 
 VMOD_ENCODE_FOO(base64,BASE64)
@@ -478,13 +486,13 @@ VMOD_ENCODE_FOO(base64url_nopad,BASE64URLNOPAD)
  */
 #define VMOD_HMAC_FOO(hash,hashup) \
 VCL_STRING \
-vmod_hmac_ ## hash(VRT_CTX, const char *key, const char *msg) \
+vmod_hmac ## hash(VRT_CTX, const char *key, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
 	if (key == NULL) \
 		return NULL; \
-	return vmod_hmac_generic(ctx, MHASH_ ## hashup, key, msg); \
+	return VPFX(hmac_generic)(ctx, MHASH_ ## hashup, key, msg); \
 }
 
 
@@ -494,7 +502,7 @@ VMOD_HMAC_FOO(md5,MD5)
 
 
 VCL_STRING
-vmod_version(VRT_CTX)
+VPFX(version)(VRT_CTX)
 {
 	(void)ctx;
 	return VERSION;
