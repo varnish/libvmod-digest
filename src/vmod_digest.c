@@ -107,7 +107,7 @@ VPFX(digest_alpha_init)(struct e_alphabet *alpha)
 }
 
 int
-init_function(VRT_CTX, struct VPFX(priv) *priv, enum vcl_event_e e)
+VPFX(init_function)(VRT_CTX, struct VPFX(priv) *priv, enum vcl_event_e e)
 {
 	(void)ctx;
 	(void)priv;
