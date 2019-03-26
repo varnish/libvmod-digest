@@ -66,6 +66,9 @@
 #define VPFX(a) vmod_ ## a
 #define VARGS(a) vmod_ ## a ## _arg
 #define VENUM(a) vmod_enum_ ## a
+#define INIT_FUNCTION init_function
+#else
+#define INIT_FUNCTION VPFX(init_function)
 #endif
 
 #ifndef MIN
@@ -107,7 +110,7 @@ VPFX(digest_alpha_init)(struct e_alphabet *alpha)
 }
 
 int
-VPFX(init_function)(VRT_CTX, struct VPFX(priv) *priv, enum vcl_event_e e)
+INIT_FUNCTION(VRT_CTX, struct VPFX(priv) *priv, enum vcl_event_e e)
 {
 	(void)ctx;
 	(void)priv;
