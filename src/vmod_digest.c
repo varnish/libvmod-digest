@@ -174,13 +174,13 @@ static unsigned char
 char_to_int (char c)
 {
 	if (c >= '0' && c <= '9')
-		return c - '0';
+		return (c - '0');
 	else if (c >= 'a' && c <= 'f')
-		return c - 87;
+		return (c - 87);
 	else if (c >= 'A' && c <= 'F')
-		return c - 55;
+		return (c - 55);
 	else
-		return 0;
+		return (0);
 }
 
 /*
@@ -196,7 +196,7 @@ hex_to_int(const char *in, size_t inlen)
 	value = char_to_int(in[0]) << 4;
 	value += char_to_int(in[1]);
 
-	return value;
+	return (value);
 }
 
 /*
@@ -229,7 +229,7 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 	 */
 	if ((!is_hex && outlen < 4 * (inlen + 2 / 3) + 1) ||
 	    ( is_hex && outlen < 4 * (inlen + 5 / 6) + 1))
-		return -1;
+		return (-1);
 
 	while ((!is_hex && inlen) || (is_hex && inlen >= 2)) {
 		unsigned char tmp[3] = {0, 0, 0};
@@ -284,7 +284,7 @@ base64_encode(struct e_alphabet *alpha, const char *in,
 
 	*out = '\0';
 
-	return out_used + 1;
+	return (out_used + 1);
 }
 
 VCL_STRING
@@ -322,7 +322,7 @@ VPFX(hmac_generic)(VRT_CTX, hashid hash, const char *key, const char *msg)
 	hexenc = (void *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
 	if (hexenc == NULL) {
 		VRT_fail(ctx, "digest.hmac_generic() Error: Out of Workspace");
-		return NULL;
+		return (NULL);
 	}
 	hexptr = hexenc;
 	sprintf((char*)hexptr,"0x");
@@ -333,7 +333,7 @@ VPFX(hmac_generic)(VRT_CTX, hashid hash, const char *key, const char *msg)
 		assert((hexptr-hexenc)<(2*(long)blocksize + 3));
 	}
 	*hexptr = '\0';
-	return (const char *)hexenc;
+	return ((const char *)hexenc);
 }
 
 VCL_STRING
@@ -352,12 +352,12 @@ VPFX(base64_generic)(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 	if (u <= 0) {
 		VRT_fail(ctx, "digest.base64_generic() Error: Out of Workspace");
 		WS_Release(ctx->ws,0);
-		return NULL;
+		return (NULL);
 	}
 	p = ctx->ws->f;
 	u = base64_encode(&alphabet[a],msg,strlen(msg),is_hex,p,u);
 	WS_Release(ctx->ws,u);
-	return p;
+	return (p);
 }
 
 VCL_STRING
@@ -377,12 +377,12 @@ VPFX(base64_decode_generic)(VRT_CTX, enum alphabets a, const char *msg)
 		VRT_fail(ctx, "digest.base64_decode_generic() Error: "
 		    "Out of Workspace");
 		WS_Release(ctx->ws,0);
-		return NULL;
+		return (NULL);
 	}
 	p = ctx->ws->f;
 	u = base64_decode(&alphabet[a], p,u,msg);
 	WS_Release(ctx->ws,u);
-	return p;
+	return (p);
 }
 
 VCL_STRING
@@ -401,14 +401,14 @@ VPFX(hash_generic)(VRT_CTX, hashid hash, const char *msg)
 	p = WS_Alloc(ctx->ws,mhash_get_block_size(hash)*2 + 1);
 	if (p == NULL) {
 		VRT_fail(ctx, "digest.hash_generic() Error: Out of Workspace");
-		return NULL;
+		return (NULL);
 	}
 	ptmp = p;
 	for (i = 0; i<mhash_get_block_size(hash);i++) {
 		sprintf(ptmp,"%.2x",h[i]);
 		ptmp+=2;
 	}
-	return p;
+	return (p);
 }
 
 #define VMOD_HASH_FOO(low, high) \
@@ -417,7 +417,7 @@ vmod_hash_ ## low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return VPFX(hash_generic)(ctx, MHASH_ ## high, msg); \
+	return (VPFX(hash_generic)(ctx, MHASH_ ## high, msg)); \
 }
 
 VMOD_HASH_FOO(sha1,SHA1)
@@ -454,7 +454,7 @@ vmod_ ## codec_low (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return VPFX(base64_generic)(ctx,codec_big,msg, 0); \
+	return (VPFX(base64_generic)(ctx,codec_big,msg, 0)); \
 } \
 \
 VCL_STRING \
@@ -462,7 +462,7 @@ vmod_ ## codec_low ## _hex (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return VPFX(base64_generic)(ctx,codec_big,msg, 1); \
+	return (VPFX(base64_generic)(ctx,codec_big,msg, 1)); \
 } \
 \
 const char * \
@@ -470,7 +470,7 @@ vmod_ ## codec_low ## _decode (VRT_CTX, const char *msg) \
 { \
 	if (msg == NULL) \
 		msg = ""; \
-	return VPFX(base64_decode_generic)(ctx,codec_big,msg); \
+	return (VPFX(base64_decode_generic)(ctx,codec_big,msg)); \
 }
 
 VMOD_ENCODE_FOO(base64,BASE64)
@@ -489,8 +489,8 @@ vmod_hmac_ ## hash(VRT_CTX, const char *key, const char *msg) \
 	if (msg == NULL) \
 		msg = ""; \
 	if (key == NULL) \
-		return NULL; \
-	return VPFX(hmac_generic)(ctx, MHASH_ ## hashup, key, msg); \
+		return (NULL); \
+	return (VPFX(hmac_generic)(ctx, MHASH_ ## hashup, key, msg)); \
 }
 
 
@@ -503,5 +503,5 @@ VCL_STRING
 VPFX(version)(VRT_CTX)
 {
 	(void)ctx;
-	return VERSION;
+	return (VERSION);
 }
