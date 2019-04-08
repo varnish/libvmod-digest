@@ -320,8 +320,10 @@ VPFX(hmac_generic)(VRT_CTX, hashid hash, const char *key, const char *msg)
 	 * HEX-encode
 	 */
 	hexenc = (void *)WS_Alloc(ctx->ws, 2*blocksize+3); // 0x, '\0' + 2 per input
-	if (hexenc == NULL)
+	if (hexenc == NULL) {
+		VRT_fail(ctx, "digest.hmac_generic() Error: Out of Workspace");
 		return NULL;
+	}
 	hexptr = hexenc;
 	sprintf((char*)hexptr,"0x");
 	hexptr+=2;
@@ -347,12 +349,13 @@ VPFX(base64_generic)(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 
 	u = WS_Reserve(ctx->ws,0);
-	p = ctx->ws->f;
-	u = base64_encode(&alphabet[a],msg,strlen(msg),is_hex,p,u);
-	if (u < 0) {
+	if (u <= 0) {
+		VRT_fail(ctx, "digest.base64_generic() Error: Out of Workspace");
 		WS_Release(ctx->ws,0);
 		return NULL;
 	}
+	p = ctx->ws->f;
+	u = base64_encode(&alphabet[a],msg,strlen(msg),is_hex,p,u);
 	WS_Release(ctx->ws,u);
 	return p;
 }
@@ -370,12 +373,14 @@ VPFX(base64_decode_generic)(VRT_CTX, enum alphabets a, const char *msg)
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 
 	u = WS_Reserve(ctx->ws,0);
-	p = ctx->ws->f;
-	u = base64_decode(&alphabet[a], p,u,msg);
-	if (u < 0) {
+	if (u <= 0) {
+		VRT_fail(ctx, "digest.base64_decode_generic() Error: "
+		    "Out of Workspace");
 		WS_Release(ctx->ws,0);
 		return NULL;
 	}
+	p = ctx->ws->f;
+	u = base64_decode(&alphabet[a], p,u,msg);
 	WS_Release(ctx->ws,u);
 	return p;
 }
@@ -394,7 +399,10 @@ VPFX(hash_generic)(VRT_CTX, hashid hash, const char *msg)
 	mhash(td, msg, strlen(msg));
 	mhash_deinit(td, h);
 	p = WS_Alloc(ctx->ws,mhash_get_block_size(hash)*2 + 1);
-	AN(p);
+	if (p == NULL) {
+		VRT_fail(ctx, "digest.hash_generic() Error: Out of Workspace");
+		return NULL;
+	}
 	ptmp = p;
 	for (i = 0; i<mhash_get_block_size(hash);i++) {
 		sprintf(ptmp,"%.2x",h[i]);
