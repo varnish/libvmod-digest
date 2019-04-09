@@ -1,0 +1,135 @@
+varnishtest "Test digest vmod out of workspace"
+
+server s1 { } -start
+
+varnish v1 -arg "-p workspace_client=9k" -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+	import vtc;
+
+	sub vcl_recv {
+		vtc.workspace_alloc(client, -5);
+		if (req.url == "/hmac_sha256") {
+			set req.http.hmac_sha256 = digest.hmac_sha256("key", "The quick brown fox jumps over the lazy dog");
+		}
+
+		if (req.url == "/hmac_sha1") {
+			set req.http.hmac_sha1 = digest.hmac_sha1("key", "The quick brown fox jumps over the lazy dog");
+		}
+
+		if (req.url == "/hmac_md5") {
+			set req.http.md5 = digest.hmac_md5("key", "The quick brown fox jumps over the lazy dog");
+		}
+
+		if (req.url == "/base64") {
+			set req.http.base64 = digest.base64("TeSTTeSTTeST");
+		}
+
+		if (req.url == "/base64_hex") {
+			set req.http.base64_hex = digest.base64_hex("0x54655354");
+		}
+
+		if (req.url == "/base64_decode") {
+			set req.http.base64_decode = digest.base64_decode("zprOsc67z47PgiDOv8+Bzq/Pg86xz4TOtQ==");
+		}
+
+		if (req.url == "/base64url") {
+			set req.http.base64url = digest.base64url("Interesting!");
+		}
+
+		if (req.url == "/base64url_hex") {
+			set req.http.base64url = digest.base64url("496E746572657374696E6721");
+		}
+
+		if (req.url == "/base64url_decode") {
+			set req.http.base64url_decode = digest.base64url_decode("MHg4MDA3MDcxMzQ2M2U3NzQ5YjkwYzJkYzI0OTExZTI3NQ");
+		}
+
+		if (req.url == "/hash_sha1") {
+			set req.http.hash_sha1 = digest.hash_sha1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+		}
+
+		if (req.url == "/hash_md4") {
+			set req.http.hash_md4 = digest.hash_md4("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+		}
+
+		if (req.url == "/hash_whirlpool") {
+			set req.http.hash_whirlpool = digest.hash_whirlpool("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+		}
+	}
+
+} -start
+
+logexpect l1 -v v1 -i VCL_Error {
+	expect * * *	"digest.hmac_generic() Error: Out of Workspace"
+	expect * * *	"digest.hmac_generic() Error: Out of Workspace"
+	expect * * *	"digest.hmac_generic() Error: Out of Workspace"
+	expect * * *	"digest.base64_generic() Error: Out of Workspace"
+	expect * * *	"digest.base64_generic() Error: Out of Workspace"
+	expect * * *	"digest.base64_decode_generic() Error: Out of Workspace"
+	expect * * *	"digest.base64_decode_generic() Error: Out of Workspace"
+	expect * * *	"digest.hash_generic() Error: Out of Workspace"
+	expect * * *	"digest.hash_generic() Error: Out of Workspace"
+	expect * * *	"digest.hash_generic() Error: Out of Workspace"
+} -start
+
+client c1 {
+	txreq -url "/hmac_sha256"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/hmac_sha1"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/hmac_md5"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/base64"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/base64_hex"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/base64_decode"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/base64url_decode"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/hash_sha1"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/hash_md4"
+	rxresp
+	expect resp.status == 503
+} -run
+
+client c1 {
+	txreq -url "/hash_whirlpool"
+	rxresp
+	expect resp.status == 503
+} -run
+
+logexpect l1 -wait
