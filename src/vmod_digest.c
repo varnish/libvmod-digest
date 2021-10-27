@@ -348,7 +348,7 @@ VPFX(base64_generic)(VRT_CTX, enum alphabets a, const char *msg, int is_hex)
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 
-	u = WS_ReserveAll(ctx->ws);
+	u = WS_Reserve(ctx->ws,0);
 	if (u <= 0) {
 		VRT_fail(ctx, "digest.base64_generic() Error: Out of Workspace");
 		WS_Release(ctx->ws,0);
@@ -372,7 +372,7 @@ VPFX(base64_decode_generic)(VRT_CTX, enum alphabets a, const char *msg)
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 
-	u = WS_ReserveAll(ctx->ws);
+	u = WS_Reserve(ctx->ws,0);
 	if (u <= 0) {
 		VRT_fail(ctx, "digest.base64_decode_generic() Error: "
 		    "Out of Workspace");
