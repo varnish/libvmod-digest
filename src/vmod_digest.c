@@ -75,7 +75,7 @@ enum alphabets {
 
 static struct e_alphabet {
 	char *b64;
-	char i64[256];
+	int8_t i64[256];
 	char padding;
 } alphabet[N_ALPHA];
 
@@ -136,7 +136,7 @@ static int
 base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 {
 	unsigned u, v, l;
-	int i;
+	int8_t i;
 
 	u = 0;
 	l = 0;
