@@ -1,0 +1,27 @@
+varnishtest "Test invalid data in digest vmod"
+
+server s1 {
+	rxreq
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import digest from "${vmod_topbuild}/src/.libs/libvmod_digest.so";
+
+	sub vcl_deliver {
+		# Test invalid base64
+		set resp.http.invalid1 = digest.base64_decode(req.http.invalid1);
+	}
+} -start
+
+logexpect l1 -v v1 -g request {
+	expect * * VCL_Error "digest: Base64 input contains invalid characters"
+} -start
+
+client c1 {
+	txreq -url "/" -hdr "invalid1: \xff"
+	rxresp
+	expect resp.http.invalid1 == ""
+} -run
+
+logexpect l1 -wait
