@@ -143,7 +143,7 @@ base64_decode(struct e_alphabet *alpha, char *d, unsigned dlen, const char *s)
 	while (*s) {
 		for (v = 0; v < 4; v++) {
 			if (*s)
-				i = alpha->i64[(int)*s++];
+				i = alpha->i64[(uint8_t)*s++];
 			else
 				i = 0;
 			if (i < 0)
