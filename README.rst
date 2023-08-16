@@ -9,7 +9,7 @@ Varnish Digest Module
 :Manual section: 3
 :Author: Kristian Lyngstøl
 :Date: 2016-03-16
-:Version: 1.0.2
+:Version: 1.0.3
 
 SYNOPSIS
 ========
