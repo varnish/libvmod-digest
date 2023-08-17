@@ -267,7 +267,7 @@ Make targets:
 AUTHOR
 ======
 
-Original author: Kristian Lyngstøl <kristian@varnish-software.com>.
+Original author: Kristian Lyngstøl <opensource@varnish-software.com>.
 
 This Vmod was written for Media Norge, Schibsted and others.
 
