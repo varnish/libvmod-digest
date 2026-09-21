@@ -50,7 +50,7 @@
 #include <cache/cache.h>
 #include <vcl.h>
 
-#include "vcc_if.h"
+#include "vcc_digest_if.h"
 
 /* Varnish < 6.2 compat */
 #ifndef VPFX

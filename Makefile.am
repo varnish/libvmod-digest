@@ -1,9 +1,6 @@
-ACLOCAL_AMFLAGS = -I m4 -I ${LIBVARNISHAPI_DATAROOTDIR}/aclocal
+ACLOCAL_AMFLAGS = -I m4 -I ${VCACHEAPI_DATAROOTDIR}/aclocal
 
 SUBDIRS = src
-
-DISTCHECK_CONFIGURE_FLAGS = \
-	VMOD_DIR='$${libdir}/varnish/vmods'
 
 EXTRA_DIST = README.rst LICENSE CHANGES.rst
 
@@ -23,5 +20,3 @@ else
 	@echo "========================================"
 	@false
 endif
-
-
