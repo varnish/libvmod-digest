@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 AC_COPYRIGHT([Copyright (c) 2011-2019 Varnish Software])
-AC_INIT([libvmod-digest], [1.1.0])
+AC_INIT([libvmod-digest], [1.1.1])
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifndef([VCACHE_VMODS], AC_MSG_ERROR([varnish.m4 (Varnish >= 9.1) is required.]))
 AC_CONFIG_SRCDIR(src/vmod_digest.vcc)
