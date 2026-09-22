@@ -3,7 +3,7 @@ AM_LDFLAGS = $(VCACHEAPI_LIBS) $(VMOD_LDFLAGS)
 
 vmod_LTLIBRARIES = libvmod_digest.la
 
-libvmod_digest_la_LDFLAGS = -lmhash
+libvmod_digest_la_LDFLAGS = $(VMOD_LDFLAGS) -lmhash
 
 libvmod_digest_la_SOURCES = \
 	vmod_digest.c
